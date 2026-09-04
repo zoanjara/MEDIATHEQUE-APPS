@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="csrf-token" content="{{ csrf_token }}">
+<title>{% block title %}Médiathèque{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v={{ asset_version('css/style.css') }}">
+<script>
+  // Helper CSRF global : injecte le jeton dans tous les fetch POST et
+  // formulaires HTML (mutations). Doit être défini AVANT main.js.
+  (function () {
+    function getCsrf() {
+      var m = document.querySelector('meta[name="csrf-token"]');
+      return m ? m.getAttribute("content") : "";
+    }
+    window.__csrfToken = getCsrf;
+    window.__withCsrfHeaders = function (headers) {
+      headers = headers || {};
+      var t = getCsrf();
+      if (t) headers["X-CSRF-Token"] = t;
+      return headers;
+    };
+    window.__appendCsrf = function (formData) {
+      if (!formData) return formData;
+      try {
+        if (!formData.has || !formData.has("csrf_token")) {
+          formData.append("csrf_token", getCsrf());
+        }
+      } catch (e) { /* ignore */ }
+      return formData;
+    };
+    // Intercepte les soumissions de formulaires HTML classiques (POST)
+    // pour y coller le champ csrf_token s'il manque.
+    document.addEventListener("submit", function (e) {
+      var form = e.target;
+      if (!form || !form.tagName || form.tagName !== "FORM") return;
+      var method = (form.getAttribute("method") || "get").toLowerCase();
+      if (method !== "post") return;
+      if (form.querySelector('input[name="csrf_token"]')) return;
+      var input = document.createElement("input");
+      input.type = "hidden";
+      input.name = "csrf_token";
+      input.value = getCsrf();
+      form.appendChild(input);
+    }, true);
+
+    // Monkey-patch fetch : ajoute X-CSRF-Token sur toute requête non-GET.
+    var _origFetch = window.fetch;
+    window.fetch = function (input, init) {
+      init = init || {};
+      var method = (init.method || "GET").toUpperCase();
+      if (method !== "GET" && method !== "HEAD" && method !== "OPTIONS") {
+        var headers;
+        if (init.headers && typeof init.headers.forEach === "function") {
+          headers = {};
+          init.headers.forEach(function (v, k) { headers[k] = v; });
+        } else {
+          headers = Object.assign({}, init.headers || {});
+        }
+        var t = getCsrf();
+        if (t && !headers["X-CSRF-Token"] && !headers["x-csrf-token"]) {
+          headers["X-CSRF-Token"] = t;
+        }
+        init.headers = headers;
+        // FormData : ajoute aussi le champ (au cas où le serveur lit form)
+        if (init.body && typeof FormData !== "undefined" && init.body instanceof FormData) {
+          try {
+            if (!init.body.has("csrf_token")) init.body.append("csrf_token", t);
+          } catch (e) { /* ignore */ }
+        }
+      }
+      return _origFetch.call(this, input, init);
+    };
+  })();
+</script>
+<script>
+  // Applique le thème et la densité sauvegardés avant l'affichage, pour
+  // éviter un flash de la mauvaise couleur / densité au chargement.
+  (function() {
+    var saved = localStorage.getItem("mediatheque_theme");
+    if (saved === "dark" || saved === "turquoise") {
+      document.documentElement.setAttribute("data-theme", saved);
+    }
+    try {
+      if (localStorage.getItem("mediatheque_ui_compact") === "1") {
+        document.documentElement.classList.add("ui-compact-pending");
+      }
+    } catch (e) { /* localStorage indisponible */ }
+  })();
+</script>
+</head>
+<body class="{% block body_class %}{% endblock %}">
+<script>
+  // Transfère le flag compact sur <body> dès que possible pour que les
+  // règles body.ui-compact s'appliquent immédiatement.
+  (function() {
+    if (document.documentElement.classList.contains("ui-compact-pending")) {
+      document.body.classList.add("ui-compact");
+      document.documentElement.classList.remove("ui-compact-pending");
+    }
+  })();
+</script>
+<header class="topbar">
+  <button type="button" id="sidebar-toggle-btn" class="sidebar-toggle-btn" title="Afficher/masquer le panneau" aria-label="Afficher/masquer le panneau" aria-expanded="false">☰</button>
+  <a href="{{ url_for('index') }}" class="brand">🎬 Médiathèque</a>
+  <form class="searchbar" action="{{ url_for('index') }}" method="get" autocomplete="off">
+    <div class="search-input-wrap">
+      <input type="text" name="q" id="search-input" placeholder="Rechercher (titre, description, commentaire...)" value="{{ request.args.get('q', '') }}">
+      <div id="search-suggestions" class="search-suggestions"></div>
+    </div>
+    <button type="submit">Rechercher</button>
+  </form>
+  <div class="topbar-right">
+    <button type="button" id="compact-toggle" class="compact-toggle-btn" title="Densité de l'interface (compact / normal)" aria-pressed="false">⊞ Dense</button>
+    <button type="button" id="theme-toggle" class="theme-toggle-btn" title="Basculer thème clair/sombre">🌙 Thème</button>
+    <a href="{{ url_for('settings_view') }}" class="settings-link">⚙ Paramètres</a>
+  </div>
+</header>
+
+<div class="layout">
+  <div id="sidebar-backdrop" class="sidebar-backdrop"></div>
+  <aside class="sidebar" id="app-sidebar">
+
+    <div class="sidebar-top-row">
+      <a href="{{ url_for('index') }}" class="all-videos-link {{ 'active' if not request.args.get('category') else '' }}">Toutes les vidéos</a>
+      <a href="{{ url_for('organize_view') }}" class="organize-link">🗂 Gérer catégories &amp; playlists</a>
+      <button type="button" id="tags-modal-open" class="organize-link tags-modal-open-btn">
+        🏷 Tags <span class="count count-rose">{{ nav_tags|length if nav_tags is defined else 0 }}</span>
+      </button>
+    </div>
+
+    <div class="sidebar-tabs" id="sidebar-tabs">
+      <button type="button" class="sidebar-tab-btn tab-categories" data-panel="category">🗂 Catégories</button>
+      <button type="button" class="sidebar-tab-btn tab-playlists" data-panel="playlist">📃 Playlists</button>
+    </div>
+
+    <div class="sidebar-sections" id="sidebar-sections" data-active-panel="category">
+    <div class="side-section side-section-categories" data-panel="category">
+    <a href="{{ url_for('organize_view', section='category') }}" class="side-section-link section-categories">Catégories</a>
+    <form action="{{ url_for('category_new') }}" method="post" class="inline-form">
+      <input type="text" name="name" placeholder="Nouvelle catégorie" required>
+      <button type="submit">+</button>
+    </form>
+    <ul class="side-list list-categories">
+      {% for c in nav_categories %}
+      <li class="side-item">
+        <a href="{{ url_for('category_view', category_id=c.id) }}" class="{{ 'active' if request.view_args and request.view_args.get('category_id') == c.id else '' }}">
+          <span class="side-item-avatar">
+            {% if c.image1 %}
+              <img src="{{ url_for('category_image', filename=c.image1) }}" alt="" loading="lazy">
+            {% else %}
+              <span class="side-item-avatar-fallback">🗂</span>
+            {% endif %}
+          </span>
+          <span class="side-item-name">{{ c.name }}</span>
+          <span class="count count-rose">{{ c.n }}</span>
+        </a>
+        <span class="side-item-actions">
+          <button type="button" class="icon-btn icon-btn-mini js-rename" data-type="category" data-id="{{ c.id }}" data-name="{{ c.name }}" title="Renommer la catégorie">✎</button>
+          <button type="button" class="icon-btn icon-btn-mini icon-btn-danger js-delete" data-type="category" data-id="{{ c.id }}" data-name="{{ c.name }}" title="Supprimer la catégorie">✕</button>
+        </span>
+      </li>
+      {% else %}
+      <li class="muted side-item-empty">Aucune catégorie</li>
+      {% endfor %}
+    </ul>
+    </div>
+
+    <div class="side-section side-section-playlists" data-panel="playlist">
+    <a href="{{ url_for('organize_view', section='playlist') }}" class="side-section-link section-playlists">Playlists</a>
+    <form action="{{ url_for('playlist_new') }}" method="post" class="inline-form">
+      <input type="text" name="name" placeholder="Nouvelle playlist" required>
+      <button type="submit">+</button>
+    </form>
+    <ul class="side-list list-playlists">
+      {% for p in nav_playlists %}
+      <li class="side-item" style="--item-color: {{ p.color }};">
+        <a href="{{ url_for('playlist_view', playlist_id=p.id) }}" class="{{ 'active' if request.view_args and request.view_args.get('playlist_id') == p.id else '' }}">
+          <span class="side-item-avatar">
+            {% if p.image1 %}
+              <img src="{{ url_for('playlist_image', filename=p.image1) }}" alt="" loading="lazy">
+            {% else %}
+              <span class="side-item-avatar-fallback">📃</span>
+            {% endif %}
+          </span>
+          <span class="side-item-label">{{ p.name }}{% if p.children %}<span class="side-sub-hint" title="{{ p.children|length }} sous-playlist{{ 's' if p.children|length != 1 else '' }} — clique pour les voir">📁</span>{% endif %}</span>
+          <span class="count count-orange">{{ p.n }}</span>
+        </a>
+        <span class="side-item-actions">
+          <button type="button" class="icon-btn icon-btn-mini js-rename" data-type="playlist" data-id="{{ p.id }}" data-name="{{ p.name }}" title="Renommer la playlist">✎</button>
+          <button type="button" class="icon-btn icon-btn-mini icon-btn-danger js-delete" data-type="playlist" data-id="{{ p.id }}" data-name="{{ p.name }}" title="Supprimer la playlist">✕</button>
+        </span>
+      </li>
+      {% else %}
+      <li class="muted side-item-empty">Aucune playlist</li>
+      {% endfor %}
+    </ul>
+    </div>
+    </div>
+  </aside>
+
+  <main class="content">
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="flash">{{ messages[0] }}</div>
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+</div>
+
+<!-- Mini-lecteur flottant (façon YouTube) : accueille le lecteur vidéo
+     persistant (#main-player) quand on navigue ailleurs dans l'appli
+     pendant qu'une vidéo est en cours de lecture. Vit HORS de .layout,
+     pour ne jamais être affecté par un remplacement du panneau latéral ou
+     du contenu (voir static/js/player-persist.js). -->
+<div id="mini-player-host" class="mini-player-host" hidden>
+  <div class="mini-player-bar">
+    <span class="mini-player-title" id="mini-player-title"></span>
+    <button type="button" id="mini-player-expand" class="icon-btn icon-btn-mini" title="Revenir à la vidéo">⤢</button>
+    <button type="button" id="mini-player-close" class="icon-btn icon-btn-mini" title="Fermer">✕</button>
+  </div>
+  <div class="mini-player-video-slot" id="mini-player-video-slot"></div>
+</div>
+
+<!-- Popup de modification rapide des métadonnées, depuis les grilles de vidéos -->
+<div id="quick-edit-overlay" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>✎ Modifier les métadonnées</h3>
+      <button type="button" id="quick-edit-close" class="icon-btn" title="Fermer">✕</button>
+    </div>
+
+    <div id="quick-edit-loading" class="modal-loading">Chargement...</div>
+    <form id="quick-edit-form" class="edit-form-grid" style="display:none;" data-initial-category="">
+      <input type="hidden" name="ajax" value="1">
+      <label class="field-full">Titre
+        <input type="text" name="title" required>
+      </label>
+      <label class="field-full">Description
+        <textarea name="description" rows="2" placeholder="Aucune description..."></textarea>
+      </label>
+      <label class="field-full">Catégorie
+{% from "_category_field.html" import category_field %}
+        {{ category_field(nav_categories, selected_id=None, selected_name='', uid='quick-edit') }}
+      </label>
+{% from "_tag_field.html" import tag_field %}
+      <label class="field-full">Tags <span class="field-hint">(mots ET images)</span>
+        {{ tag_field("quick-edit") }}
+      </label>
+      <label>Note
+        <div class="star-rating-input" data-name="rating">
+          <input type="hidden" name="rating" value="0">
+          {% for i in range(1, 6) %}<span class="star-choice" data-star="{{ i }}">★</span>{% endfor %}
+          <span class="star-clear" role="button" tabindex="0" title="Retirer la note">✕</span>
+        </div>
+      </label>
+      <label>Date de la vidéo
+        <input type="date" name="video_date">
+      </label>
+      <label>Nombre de lectures <span class="field-hint">(généré automatiquement, modifiable)</span>
+        <input type="number" name="views" min="0" step="1">
+      </label>
+{% from "_playlist_field.html" import playlist_field %}
+      <label class="field-full">Playlists <span class="field-hint">(playlists de cette vidéo)</span>
+        {{ playlist_field(nav_playlists) }}
+      </label>
+      <label class="field-full">Commentaire
+        <textarea name="comment" rows="2" placeholder="Ajoute un commentaire personnel..."></textarea>
+      </label>
+      <div class="field-full edit-panel-actions">
+        <button type="submit" class="btn-primary">✓ Enregistrer les modifications</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Fenêtre listant tous les tags (accès depuis le bouton "🏷 Tags" du panneau
+     latéral) : recherche par nom, filtre "avec/sans image", tri, création
+     rapide d'un nouveau tag, et pour chaque carte : clic/glisser une image
+     directement sur la vignette pour l'enregistrer aussitôt (pas de bouton
+     "Enregistrer" séparé), et un nom modifiable directement en ligne (clic
+     sur le crayon → champ éditable → Entrée pour valider). -->
+<div id="tags-modal-overlay" class="modal-overlay">
+  <div class="modal-box modal-box-wide tags-modal-box">
+    <div class="modal-header tags-modal-header">
+      <div class="tags-modal-title-row">
+        <h3>🏷 Tags</h3>
+        <span class="tags-modal-count-badge" id="tags-modal-count-badge" aria-live="polite">{{ nav_tags|length if nav_tags is defined else 0 }}</span>
+      </div>
+      <button type="button" id="tags-modal-close" class="icon-btn" title="Fermer">✕</button>
+    </div>
+
+    <div class="tags-modal-toolbar-modern organize-toolbar">
+      <div class="tags-modal-search-wrap">
+        <span class="tags-modal-search-icon" aria-hidden="true">🔍</span>
+        <input type="search" class="org-filter-input tags-modal-search-input"
+               data-list="tags-modal-list"
+               id="tags-modal-search-input"
+               placeholder="Rechercher un tag…"
+               autocomplete="off">
+      </div>
+      <select class="org-photo-filter tags-modal-select" data-list="tags-modal-list" title="Filtrer par image" aria-label="Filtrer par image">
+        <option value="0">Tous</option>
+        <option value="yes">Avec image</option>
+        <option value="no">Sans image</option>
+      </select>
+      <select class="org-sort-select tags-modal-select" data-list="tags-modal-list" title="Trier" aria-label="Trier">
+        <option value="name-asc">A → Z</option>
+        <option value="name-desc">Z → A</option>
+        <option value="count-desc">Plus utilisés</option>
+      </select>
+      <span class="tags-modal-result-count muted" id="tags-modal-result-count"></span>
+    </div>
+
+    <form id="tags-modal-create-form" class="tags-modal-create-row tags-modal-create-modern">
+      <input type="text" id="tags-modal-create-input" placeholder="Nom du nouveau tag… (Entrée pour créer)" autocomplete="off" maxlength="80">
+      <button type="submit" class="btn-primary">+ Créer</button>
+    </form>
+    <p class="tags-modal-create-hint muted" id="tags-modal-create-hint" hidden></p>
+
+    <div class="tags-modal-list org-cards-list view-grid" id="tags-modal-list">
+      {% if nav_tags %}{% for t in nav_tags %}
+      {% include "_tag_card.html" %}
+      {% endfor %}{% else %}
+      <div class="tags-modal-empty js-tags-modal-empty">
+        <div class="tags-modal-empty-icon" aria-hidden="true">🏷</div>
+        <p class="tags-modal-empty-title">Aucun tag pour le moment</p>
+        <p class="muted">Crée le premier ci-dessus — tu pourras lui ajouter une image ensuite.</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<template id="tag-card-template">
+  <div class="org-card org-card-tag tag-card-modern" data-name="" data-count="0" data-has-photo="0">
+    <div class="tag-card-actions">
+      <button type="button" class="icon-btn icon-btn-mini js-tag-inline-rename" title="Renommer le tag">✎</button>
+      <button type="button" class="icon-btn icon-btn-mini icon-btn-danger js-delete org-card-delete" data-type="tag" data-id="" data-name="" title="Supprimer le tag">✕</button>
+    </div>
+
+    <label class="tag-card-cover js-tag-instant-upload" title="Cliquer ou glisser une image ici">
+      <span class="org-cover-placeholder muted tag-card-placeholder"></span>
+      <span class="tag-card-cover-hint">🖼 Changer l'image</span>
+      <span class="tag-card-count-badge org-card-count">0</span>
+      <input type="file" accept="image/*" hidden>
+    </label>
+
+    <a href="#" class="org-card-link tag-card-link">
+      <div class="org-card-head">
+        <div class="org-card-title tag-card-title-wrap">
+          <strong class="js-tag-name-display"></strong>
+        </div>
+        <span class="org-card-count tag-card-count-text muted">0 vidéo</span>
+      </div>
+    </a>
+  </div>
+</template>
+
+<script>
+  // Index léger (id/nom/photo) de TOUS les tags existants dans la base,
+  // utilisé par le champ "Tags" du panneau "✎ Modifier les métadonnées"
+  // (voir static/js/main.js, initTagField) pour reconnaître instantanément,
+  // pendant la frappe, qu'un mot tapé correspond à un tag déjà existant —
+  // et afficher tout de suite sa photo actuelle sur la puce, sans
+  // aller-retour serveur. Régénéré à chaque chargement de page (voir
+  // inject_sidebar_nav côté serveur), donc toujours à jour.
+  window.__ALL_TAGS__ = {{ nav_tags_json|tojson }};
+</script>
+<script src="{{ url_for('static', filename='js/player-smooth.js') }}?v={{ asset_version('js/player-smooth.js') }}"></script>
+<script src="{{ url_for('static', filename='js/player-controls.js') }}?v={{ asset_version('js/player-controls.js') }}"></script>
+<script src="{{ url_for('static', filename='js/player-ui.js') }}?v={{ asset_version('js/player-ui.js') }}"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}?v={{ asset_version('js/main.js') }}"></script>
+<script src="{{ url_for('static', filename='js/disk-filter.js') }}?v={{ asset_version('js/disk-filter.js') }}"></script>
+<script src="{{ url_for('static', filename='js/player-persist.js') }}?v={{ asset_version('js/player-persist.js') }}"></script>
+<script src="{{ url_for('static', filename='js/live-sync.js') }}?v={{ asset_version('js/live-sync.js') }}"></script>
+<script src="{{ url_for('static', filename='js/playback-priority.js') }}?v={{ asset_version('js/playback-priority.js') }}"></script>
+<script src="{{ url_for('static', filename='js/player-next-preload.js') }}?v={{ asset_version('js/player-next-preload.js') }}"></script>
+</body>
+</html>

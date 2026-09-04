@@ -1,0 +1,387 @@
+{% extends "base.html" %}
+{% block title %}{{ video.title }}{% endblock %}
+{% block body_class %}video-page{% endblock %}
+{% block content %}
+
+<div class="player-layout player-layout-wide">
+  <div class="player-main">
+    <div class="player-sticky-col" id="player-sticky-col">
+    <div class="now-playing-topbar" id="player-overlay-top">
+      {% if now_playing_entity %}
+      <a class="now-playing-badge-bar" id="now-playing-subplaylist-card" href="{{ now_playing_entity.url }}" title="{{ 'Catégorie' if now_playing_kind == 'category' else ('Sous-playlist' if now_playing_kind == 'sub_playlist' else 'Playlist') }} en cours de lecture : {{ now_playing_entity.name }}">
+        <span class="now-playing-badge-cover">
+          {% if now_playing_entity.image_url %}
+            <img src="{{ now_playing_entity.image_url }}" alt="">
+          {% else %}
+            <span class="now-playing-badge-cover-fallback">{{ '🗂' if now_playing_kind == 'category' else '📃' }}</span>
+          {% endif %}
+        </span>
+        <span class="now-playing-badge-text">
+          <span class="now-playing-badge-kicker"><span class="now-playing-dot"></span>Lecture maintenant</span>
+          <span class="now-playing-badge-name">{{ now_playing_entity.name }}</span>
+        </span>
+      </a>
+      {% endif %}
+    </div>
+
+    <div class="video-frame" id="video-frame">
+      {# Codec lourd sans version compatible prête : pas d'autoplay, pas de
+         source lourde chargée, pas de transcodage auto → CPU protégé.
+         L'utilisateur choisit VLC/MPV, mode compatible, ou forcer. #}
+      {% set heavy_gate = block_heavy_autoplay %}
+      {% if likely_playable or heavy_gate %}
+        <video id="main-player" {% if not heavy_gate %}autoplay{% endif %}
+               preload="{{ 'none' if heavy_gate else 'metadata' }}" class="video-player"
+               data-video-id="{{ video.id }}"
+               poster="{% if video.thumbnail %}{{ url_for('thumb', filename=video.thumbnail) }}{% endif %}"
+               data-transcode-start-url="{{ url_for('transcode_start', video_id=video.id) }}"
+               data-transcode-status-url="{{ url_for('transcode_status', video_id=video.id) }}"
+               data-transcode-stream-url="{{ url_for('stream_transcode', video_id=video.id) }}"
+               data-auto-compat="0"
+               data-codec-risky="{{ '1' if codec_risky else '0' }}"
+               data-heavy-gate="{{ '1' if heavy_gate else '0' }}"
+               data-warm-url="{{ url_for('stream_warm', video_id=video.id) }}"
+               data-stream-url="{{ url_for('stream', video_id=video.id) }}"
+               data-file-size="{{ video.size_bytes or 0 }}">
+          {% if not heavy_gate %}
+          <source src="{{ initial_stream_url }}">
+          {% endif %}
+          Ton navigateur ne peut pas lire cette vidéo intégrée.
+        </video>
+        {% if heavy_gate %}
+        <div class="heavy-codec-gate" id="heavy-codec-gate" role="dialog" aria-modal="true"
+             aria-labelledby="heavy-codec-gate-title">
+          <div class="heavy-codec-gate-card">
+            <div class="heavy-codec-gate-icon" aria-hidden="true">⚠️</div>
+            <h2 id="heavy-codec-gate-title">Codec lourd détecté</h2>
+            <p>Cette vidéo (<strong>{{ video.video_codec or 'codec inconnu' }}</strong>{% if video.width %} · {{ video.width }}×{{ video.height }}{% endif %})
+               risque de saturer le processeur en lecture intégrée.</p>
+            <p class="heavy-codec-gate-hint">Recommandé : ouvrir avec <strong>VLC</strong> ou <strong>MPV</strong>
+               (lecteur par défaut du système) — aucun impact CPU sur l'appli.</p>
+            <div class="heavy-codec-gate-actions">
+              <button type="button" class="btn-primary heavy-gate-external" id="heavy-gate-vlc"
+                      data-video-id="{{ video.id }}">▶ Ouvrir avec VLC / MPV</button>
+              <button type="button" class="heavy-gate-compat" id="heavy-gate-compat"
+                      title="Conversion allégée (utilise un peu de CPU, à votre demande uniquement)">🚀 Mode compatible (conversion)</button>
+              <button type="button" class="heavy-gate-force" id="heavy-gate-force"
+                      title="Lancer quand même la lecture dans le navigateur">Forcer la lecture intégrée</button>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+      {% else %}
+        <div class="no-preview">
+          <p>Ce format ({{ video.filename.rsplit('.', 1)[-1]|upper }}) ne se lit pas forcément dans le navigateur.</p>
+          <p>Ouvre le fichier dans ton lecteur habituel (VLC, MPV…), ou lance le mode compatible à la demande :</p>
+          <video id="main-player" preload="none" class="video-player" data-video-id="{{ video.id }}"
+                 data-transcode-start-url="{{ url_for('transcode_start', video_id=video.id) }}"
+                 data-transcode-status-url="{{ url_for('transcode_status', video_id=video.id) }}"
+                 data-transcode-stream-url="{{ url_for('stream_transcode', video_id=video.id) }}"
+                 data-auto-compat="0"
+                 data-codec-risky="1"
+                 data-heavy-gate="1"
+                 data-warm-url="{{ url_for('stream_warm', video_id=video.id) }}"
+                 data-stream-url="{{ url_for('stream', video_id=video.id) }}"
+                 data-file-size="{{ video.size_bytes or 0 }}">
+          </video>
+          <div class="heavy-codec-gate" id="heavy-codec-gate" role="dialog" aria-modal="true">
+            <div class="heavy-codec-gate-card">
+              <div class="heavy-codec-gate-icon" aria-hidden="true">⚠️</div>
+              <h2>Format peu compatible</h2>
+              <p>Lecture intégrée déconseillée (risque de CPU à 100&nbsp;%).</p>
+              <div class="heavy-codec-gate-actions">
+                <button type="button" class="btn-primary heavy-gate-external" id="heavy-gate-vlc"
+                        data-video-id="{{ video.id }}">▶ Ouvrir avec VLC / MPV</button>
+                <button type="button" class="heavy-gate-compat" id="heavy-gate-compat">🚀 Mode compatible</button>
+                <button type="button" class="heavy-gate-force" id="heavy-gate-force">Forcer lecture intégrée</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+
+      <div class="player-overlay-bottom" id="player-overlay-bottom">
+        <!-- La barre de progression fluide (static/js/player-smooth.js) est
+             insérée ici automatiquement en haut de cet overlay bas. -->
+        <div class="player-nav-buttons player-nav-overlay" id="player-nav-buttons"
+             data-video-id="{{ video.id }}"
+             data-playlist-ctx="{{ playlist_ctx_id or '' }}"
+             data-category-ctx="{{ category_ctx_id or '' }}"
+             data-tag-ctx="{{ tag_ctx_id or '' }}"
+             data-prev-url="{% if prev_video %}{{ url_for('video_detail', video_id=prev_video.id, playlist=playlist_ctx_id, category=category_ctx_id, tag=tag_ctx_id) }}{% endif %}"
+             data-next-url="{% if next_video %}{{ url_for('video_detail', video_id=next_video.id, playlist=playlist_ctx_id, category=category_ctx_id, tag=tag_ctx_id, discover=(next_discover_qs or none)) }}{% endif %}">
+          <button type="button" id="player-playpause-btn" class="player-nav-icon player-playpause-btn" title="Lecture / Pause" aria-label="Lecture / Pause">▶</button>
+          {% if prev_video %}
+            <a class="btn-primary player-nav-prev player-nav-icon" href="{{ url_for('video_detail', video_id=prev_video.id, playlist=playlist_ctx_id, category=category_ctx_id, tag=tag_ctx_id) }}" title="Vidéo précédente">⏮</a>
+          {% else %}
+            <span class="player-nav-btn-disabled player-nav-prev player-nav-icon" title="Vidéo précédente">⏮</span>
+          {% endif %}
+          {% if next_video %}
+            <a class="btn-primary player-nav-next player-nav-icon" href="{{ url_for('video_detail', video_id=next_video.id, playlist=playlist_ctx_id, category=category_ctx_id, tag=tag_ctx_id, discover=(next_discover_qs or none)) }}" title="Vidéo suivante">⏭</a>
+          {% else %}
+            <span class="player-nav-btn-disabled player-nav-next player-nav-icon" title="Vidéo suivante">⏭</span>
+          {% endif %}
+          <button type="button" id="shuffle-toggle-btn" class="shuffle-btn player-nav-icon" title="Lecture aléatoire : précédent/suivant piochent au hasard dans la playlist, la catégorie ou toutes les vidéos">🔀</button>
+          <div class="player-volume" id="player-volume">
+            <button type="button" id="player-volume-btn" class="player-volume-btn" title="Couper/rétablir le son">🔊</button>
+            <input type="range" id="player-volume-slider" class="player-volume-slider" min="0" max="1" step="0.05" value="1" title="Volume">
+          </div>
+          <div class="speed-controls"></div>
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <!-- #player-fit-group : SEUL ce bloc (titre + ligne d'infos + détails
+         "Informations de lecture") entre désormais dans le calcul de la
+         "vue d'ensemble sans scroll" de l'écran (voir initPlayerFineFit
+         dans main.js) — à l'identique du repère "4:50 · 1920×1080 · 78 Mo ·
+         0 vues · 29 janvier 2019" + "ⓘ Informations de lecture" donné en
+         référence. Les cases playlist/sous-playlist/catégorie, les actions,
+         la description/les tags et le panneau d'édition, plus bas, n'en
+         font plus partie : ils peuvent désormais dépasser la fenêtre sans
+         réduire la taille de l'écran (la page défile alors normalement
+         pour les atteindre, l'écran restant collé en haut). -->
+    <div class="player-fit-group" id="player-fit-group">
+      <div class="video-title-row">
+        <h1 class="video-title" id="video-title-display">{{ video.title }}</h1>
+        <button type="button" class="fav-btn fav-btn-detail js-fav-toggle{{ ' is-fav' if video.favorite }}" data-video-id="{{ video.id }}" title="{{ 'Retirer des favoris' if video.favorite else 'Ajouter aux favoris' }}" aria-pressed="{{ 'true' if video.favorite else 'false' }}">♥</button>
+      </div>
+      <div class="video-meta" id="video-meta-display">
+        {{ video.duration_seconds|duration }} · {{ video.width }}×{{ video.height }} · {{ video.size_bytes|filesize }} · <span id="video-views-display">{{ video.views }}</span> vues
+        <span id="video-date-display" {% if not video.video_date %}style="display:none"{% endif %}> · {{ video.video_date|frdate }}</span>
+        <span id="video-rating-display">{% if video.rating %} · <span class="stars-display">{{ '★' * video.rating }}{{ '☆' * (5 - video.rating) }}</span>{% endif %}</span>
+      </div>
+      <details class="playback-diagnostics">
+        <summary>ⓘ Informations de lecture</summary>
+        <div class="playback-diagnostics-grid">
+          <span>Format</span><strong>{{ video.filename.rsplit('.', 1)[-1]|upper }}</strong>
+          <span>Codec vidéo</span><strong>{{ video.video_codec or 'inconnu' }}</strong>
+          <span>Résolution</span><strong>{{ video.width or '?' }} × {{ video.height or '?' }}</strong>
+          <span>Mode recommandé</span><strong>{{ 'Compatible (conversion accélérée si disponible)' if (not likely_playable or video.codec_risky) else 'Lecture directe' }}</strong>
+        </div>
+      </details>
+    </div>
+
+    <!-- Cases playlist/sous-playlist/catégorie rattachées à la vidéo,
+         désormais placées EN DESSOUS du bloc titre/infos ci-dessus (et non
+         plus juste sous l'écran) : elles ne font plus partie de la "vue
+         d'ensemble sans scroll" (voir #player-fit-group ci-dessus), donc
+         plus besoin d'un défilement interne dédié pour les contenir — la
+         cascade s'affiche simplement à plat, la page défilant normalement
+         s'il y en a beaucoup. Purement un déplacement de position dans le
+         flux : aucun changement de comportement ni du rafraîchissement
+         AJAX après édition des métadonnées (qui cible #video-context-cards
+         par id, peu importe sa position dans le DOM).
+
+         Une vidéo peut appartenir à PLUSIEURS playlists/sous-playlists à la
+         fois (cases à cocher multiples) : chacune reçoit sa propre carte,
+         affichées EN CASCADE (empilées verticalement) dans
+         #video-context-cards. Le tout est replié dans un <details> pour
+         rendre cette vue d'ensemble facultative (repliable) sans JS
+         supplémentaire, masqué automatiquement si la vidéo n'appartient à
+         rien (voir :has() dans style.css). -->
+    {% macro context_card(entity, kicker, css_class, icon, url, image_endpoint) %}
+      <a class="context-card {{ css_class }}" href="{{ url }}">
+        <div class="context-card-cover">
+          {% if entity.image1 %}
+            <img src="{{ url_for(image_endpoint, filename=entity.image1) }}" alt="">
+          {% else %}
+            <div class="context-card-placeholder">{{ icon }}</div>
+          {% endif %}
+        </div>
+        <div class="context-card-info">
+          <div class="context-card-kicker">{{ kicker }}</div>
+          <div class="context-card-title">{{ entity.name }}</div>
+        </div>
+      </a>
+    {% endmacro %}
+    <details class="video-context-details" id="video-context-details" open>
+      <summary class="video-context-summary">Appartenances (playlists / catégorie)</summary>
+      <div class="video-context-cards" id="video-context-cards">
+        {% for sp in display_sub_playlists %}
+          {{ context_card(sp, 'Sous-playlist', 'context-card-subplaylist', '📃', url_for('playlist_view', playlist_id=sp.id), 'playlist_image') }}
+        {% endfor %}
+        {% for p in display_playlists %}
+          {{ context_card(p, 'Playlist', 'context-card-playlist', '📃', url_for('playlist_view', playlist_id=p.id), 'playlist_image') }}
+        {% endfor %}
+        {% if display_category %}
+          {{ context_card(display_category, 'Catégorie', 'context-card-category', '🗂', url_for('category_view', category_id=display_category.id), 'category_image') }}
+        {% endif %}
+      </div>
+    </details>
+
+    <div class="video-actions">
+      <form action="{{ url_for('open_external', video_id=video.id) }}" method="post" onsubmit="return false;">
+        <button type="button" onclick="openExternal({{ video.id }})">▶ Ouvrir dans le lecteur par défaut</button>
+      </form>
+      <form action="{{ url_for('open_folder', video_id=video.id) }}" method="post" onsubmit="return false;">
+        <button type="button" onclick="openFolder({{ video.id }})">📁 Emplacement du fichier</button>
+      </form>
+      <button type="button" id="video-delete-btn" class="danger" data-video-id="{{ video.id }}">🗑 Supprimer le fichier</button>
+      <h2 class="edit-block-title video-actions-editbtn" id="edit-block-title" role="button" tabindex="0"
+          title="Passer en mode édition des métadonnées" aria-expanded="false" aria-controls="edit-panel">
+        <span class="edit-block-title-main">✎ Modifier les métadonnées</span>
+        <span class="edit-block-hint" id="edit-block-hint">Mode lecture · cliquer pour éditer</span>
+      </h2>
+    </div>
+
+    <p class="video-description" id="video-description-display" {% if not video.description %}style="display:none"{% endif %}>{{ video.description }}</p>
+    <p class="video-comment" id="video-comment-display" {% if not video.comment %}style="display:none"{% endif %}>💬 {{ video.comment }}</p>
+    <div class="video-tags" id="video-tags-display" {% if not tags %}style="display:none"{% endif %}>
+      {% for t in tags %}<a href="{{ url_for('tag_view', tag_id=t.id) }}" class="tag-pill {{ 'tag-pill-with-image' if t.image1 else '' }}">{% if t.image1 %}<img src="{{ url_for('tag_image', filename=t.image1) }}" alt="" class="tag-pill-img" loading="lazy">{% endif %}{{ t.name }}</a>{% endfor %}
+    </div>
+
+    <div class="edit-block" id="edit-block">
+      <div class="edit-panel" id="edit-panel" hidden>
+        <form action="{{ url_for('video_edit', video_id=video.id) }}" method="post"
+              class="edit-form-grid edit-form-locked" id="video-edit-form" inert
+              data-initial-category="{{ video.category_id or '' }}"
+              data-initial-playlists="{{ selected_playlist_ids|sort|join(',') }}">
+          <input type="hidden" name="ajax" value="1">
+          <input type="hidden" name="playlist_ctx_id" value="{{ playlist_ctx_id or '' }}">
+          <input type="hidden" name="category_ctx_id" value="{{ category_ctx_id or '' }}">
+
+          {# Un seul enfant "field-full" ici : neutralise la grille 2 colonnes
+             générique de .edit-form-grid (partagée avec la popup rapide,
+             Catégorie/Playlist/Tag/Organiser — voir static/css/style.css)
+             sans y toucher, pour laisser la mise en page ci-dessous gérer
+             librement sa propre disposition en deux colonnes + section
+             pleine largeur. #}
+          <div class="field-full">
+            <div class="edit-panel-topbar">
+              <span class="edit-panel-topbar-label">
+                <span class="edit-dirty-dot" title="Modifications non enregistrées" aria-hidden="true"></span>
+                <span class="edit-panel-topbar-text">✎ Métadonnées de la vidéo</span>
+                <span class="edit-dirty-label" aria-live="polite">Modifications non enregistrées</span>
+              </span>
+              <div class="edit-panel-topbar-actions">
+                <button type="button" class="btn-ghost js-edit-cancel" id="edit-cancel-btn" title="Annuler et quitter le mode édition">Annuler</button>
+                <button type="submit" class="btn-primary js-edit-save" id="edit-save-btn" disabled title="Ctrl+S">✓ Enregistrer</button>
+              </div>
+            </div>
+
+            <div class="edit-form-columns">
+              <div class="edit-col-main">
+                <section class="edit-section" aria-labelledby="edit-sec-content">
+                  <h3 class="edit-section-title" id="edit-sec-content">📝 Contenu</h3>
+                  <label class="edit-field-title">Titre
+                    <input type="text" name="title" value="{{ video.title }}" required>
+                  </label>
+                  <label>Description
+                    <textarea name="description" rows="3" placeholder="Résumé ou description de la vidéo…">{{ video.description }}</textarea>
+                  </label>
+                  <label>Commentaire <span class="field-hint">(personnel, non affiché ailleurs)</span>
+                    <textarea name="comment" rows="2" placeholder="Note personnelle…">{{ video.comment or '' }}</textarea>
+                  </label>
+                </section>
+
+                <section class="edit-section" aria-labelledby="edit-sec-tags">
+                  <h3 class="edit-section-title" id="edit-sec-tags">🏷 Tags</h3>
+                  {% from "_tag_field.html" import tag_field %}
+                  <label class="edit-label-plain">
+                    <span class="field-hint">Recherche ou crée un tag · image sur une puce</span>
+                    {{ tag_field("video-" ~ video.id, selected=tags) }}
+                  </label>
+                </section>
+              </div>
+
+              <div class="edit-col-side">
+                <section class="edit-side-card edit-side-card-grouped" aria-labelledby="edit-sec-org">
+                  <h3 class="edit-section-title" id="edit-sec-org">🗂 Organisation</h3>
+
+                  <label>Catégorie
+{% from "_category_field.html" import category_field %}
+                    {{ category_field(
+                         categories,
+                         selected_id=video.category_id,
+                         selected_name=((categories|selectattr('id', 'equalto', video.category_id)|map(attribute='name')|first) or ''),
+                         uid='video-edit'
+                       ) }}
+                  </label>
+
+                  <label>Note
+                    <div class="star-rating-input" data-name="rating" data-value="{{ video.rating or 0 }}">
+                      <input type="hidden" name="rating" value="{{ video.rating or 0 }}">
+                      {% for i in range(1, 6) %}
+                      <span class="star-choice" data-star="{{ i }}" title="{{ ['Très mauvais','Mauvais','Moyen','Bon','Excellent'][i-1] }}">★</span>
+                      {% endfor %}
+                      <span class="star-value-label js-star-value" aria-live="polite">{% if video.rating %}{{ video.rating }}/5{% else %}—{% endif %}</span>
+                      <span class="star-clear" role="button" tabindex="0" title="Retirer la note">✕</span>
+                    </div>
+                  </label>
+
+                  <label>Date de la vidéo
+                    <input type="date" name="video_date" value="{{ video.video_date or '' }}">
+                  </label>
+                </section>
+
+                <details class="edit-side-card edit-advanced-details">
+                  <summary>⚙️ Options avancées</summary>
+                  <div class="edit-advanced-body">
+                    <label>Nombre de lectures <span class="field-hint">(auto, modifiable)</span>
+                      <input type="number" name="views" min="0" step="1" value="{{ video.views or 0 }}">
+                    </label>
+                  </div>
+                </details>
+              </div>
+            </div>
+
+            <section class="edit-form-playlists-full edit-section" aria-labelledby="edit-sec-playlists">
+              <div class="edit-side-card">
+                <h3 class="edit-section-title" id="edit-sec-playlists">📃 Playlists</h3>
+                {% from "_playlist_field.html" import playlist_field %}
+                <label class="edit-label-plain">
+                  <span class="field-hint">Playlists et sous-playlists associées à cette vidéo</span>
+                  {{ playlist_field(nav_playlists, selected_ids=selected_playlist_ids) }}
+                </label>
+              </div>
+            </section>
+          </div>
+        </form>
+        <div class="edit-panel-secondary">
+          {% if video.featured %}
+          <form action="{{ url_for('unfeature_video', video_id=video.id) }}" method="post">
+            <button type="submit" class="feature-btn">📌 Retirer de la une</button>
+          </form>
+          {% else %}
+          <form action="{{ url_for('feature_video', video_id=video.id) }}" method="post">
+            <button type="submit" class="feature-btn">📌 Mettre à la une</button>
+          </form>
+          {% endif %}
+          <form action="{{ url_for('video_remove', video_id=video.id) }}" method="post" onsubmit="return confirm('Retirer cette vidéo de la bibliothèque ? Le fichier original ne sera pas supprimé.');">
+            <button type="submit" class="danger">🗑 Retirer de la bibliothèque</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="filepath-info">📁 {{ video.path }}</div>
+  </div>
+
+  <div class="player-related">
+    <h3>{{ 'Vidéo suivante' if (playlist_ctx_id or category_ctx_id or tag_ctx_id) else 'À découvrir aussi' }}</h3>
+    {% for v in related %}
+    <a class="related-card" href="{{ url_for('video_detail', video_id=v.id, playlist=playlist_ctx_id, category=category_ctx_id, tag=tag_ctx_id, discover=(v.discover_qs or none)) }}">
+      <div class="thumb-wrap related-thumb"
+           {% if v.thumbnail and v.preview_count and v.preview_count > 0 %}
+           data-preview-base="{{ v.thumbnail.rsplit('.', 1)[0] }}"
+           data-preview-count="{{ v.preview_count }}"
+           {% endif %}>
+        {% if v.thumbnail %}
+          <img class="thumb-img" src="{{ url_for('thumb', filename=v.thumbnail) }}" loading="eager" decoding="async" alt="">
+        {% else %}
+          <div class="thumb-placeholder">🎞</div>
+        {% endif %}
+        <span class="video-play-overlay" aria-hidden="true"><span class="video-play-icon"></span></span>
+      </div>
+      <div>
+        <div class="related-title">{{ v.title }}</div>
+        <div class="related-meta">{{ v.duration_seconds|duration }} · {{ v.views }} vue{{ 's' if v.views != 1 else '' }} · {{ v.size_bytes|filesize }}</div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+
+{% endblock %}

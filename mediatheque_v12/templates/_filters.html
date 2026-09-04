@@ -1,0 +1,170 @@
+{# Partial réutilisé par index.html, category.html et playlist.html.
+   Variables attendues dans le contexte parent : q, tag_id, sort,
+   duration_min, duration_max, size_min, size_max, resolution, rating_min, date_from, date_to,
+   has_comment, favorite_only, all_tags, categories_flat, playlists_flat, category_id,
+   playlist_id, show_category (bool), show_playlist (bool), facets (dict),
+   playlist_root_id (id de la playlist principale choisie, ou déduite de la
+   sous-playlist choisie, ou None).
+   Le formulaire n'a pas d'action : il se soumet toujours sur l'URL
+   courante (accueil, page catégorie ou page playlist).
+
+   Filtre dynamique inter-champs (facets) : `facets` est calculé côté
+   serveur par get_filter_facets() dans app.py, à partir de TOUS les
+   filtres déjà actifs. Chaque case (catégorie, tag, playlist,
+   sous-playlist, résolution, note minimum) ne propose alors que les
+   options qui donneraient encore au moins un résultat compte tenu des
+   AUTRES filtres actifs - la valeur actuellement sélectionnée reste
+   toujours affichée même si elle est en dehors de cet ensemble, pour ne
+   jamais faire disparaître le choix en cours de l'utilisateur. Comme le
+   formulaire se soumet automatiquement à chaque changement (voir
+   initDynamicFilters() dans main.js), poser un filtre sur une case fait
+   donc bien immédiatement se restreindre les autres cases.
+
+   Playlist / sous-playlist : 2 champs select séparés ("playlist" pour les
+   playlists principales, "subplaylist" pour les sous-playlists, chacune
+   affichée avec son fil d'ariane via p.path) pour faciliter la recherche
+   dans de longues listes. Les deux sont comparés à la même variable
+   playlist_id : selon la playlist choisie, c'est l'un ou l'autre champ qui
+   apparaît sélectionné. Côté serveur, un seul filtre playlist_id est
+   réellement appliqué (voir index() / category_view() dans app.py).
+   En plus du filtrage par facettes, le champ "Sous-playlist" est aussi
+   restreint par généalogie via playlist_root_id (calculé par
+   resolve_playlist_root_id() dans app.py) : dès qu'une playlist principale
+   est choisie dans "Playlist", seules ses propres sous-playlists
+   apparaissent dans "Sous-playlist" (au lieu de toutes les sous-playlists
+   de toutes les playlists).
+
+   Variable optionnelle "bare" (bool) : quand elle vaut true, ce partial
+   n'affiche QUE le <form> (sans son propre <details>/<summary> "🔎 Filtrer
+   par..."). Utilisé par _video_grid.html quand unified_toolbar est actif
+   (vues "Toutes les vidéos" et "Sous-playlist") : le formulaire est alors
+   imbriqué dans le <details> de la barre d'outils unifiée, pour ne pas
+   avoir 2 volets déroulants imbriqués l'un dans l'autre. Le formulaire
+   lui-même (champs, ids, classes) reste rigoureusement identique dans les
+   2 cas, donc tout le JS existant (initDynamicFilters, suggestions de
+   recherche...) continue de fonctionner sans aucune modification. #}
+{% set any_filter = q or tag_id or (show_category and category_id) or (show_playlist and playlist_id)
+   or duration_min or duration_max or size_min or size_max or resolution or rating_min or date_from or date_to or has_comment or favorite_only %}
+{% if not bare %}
+<details class="advanced-search">
+  <summary>🔎 Filtrer par...</summary>
+{% endif %}
+  <form class="advanced-fields" method="get">
+    {% if sort %}<input type="hidden" name="sort" value="{{ sort }}">{% endif %}
+    {# Tout changement de filtre repart à la page 1 (sinon page 3 d'un
+       ancien résultat peut rester affichée après un nouveau filtre). #}
+    <input type="hidden" name="page" value="1">
+
+    <label class="field-full">Recherche
+      <div class="search-input-wrap">
+        <input type="text" name="q" id="filter-search-input" value="{{ q or '' }}" placeholder="Titre, description, commentaire..." autocomplete="off">
+        <div id="filter-search-suggestions" class="search-suggestions"></div>
+      </div>
+    </label>
+
+    {% if show_category %}
+    <label>Catégorie
+      <select name="category">
+        <option value="">Toutes les catégories</option>
+        {% for c in categories_flat if not facets or c.id in facets.category_ids or category_id == c.id %}
+        <option value="{{ c.id }}" {{ 'selected' if category_id == c.id }}>{{ c.name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    {% endif %}
+
+    {% if show_tag is not defined or show_tag %}
+    <label>Tag
+      <select name="tag">
+        <option value="">Tous les tags</option>
+        {% for t in all_tags if not facets or t.id in facets.tag_ids or tag_id == t.id %}
+        <option value="{{ t.id }}" {{ 'selected' if tag_id == t.id }}>{{ t.name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    {% endif %}
+
+    {% if show_playlist %}
+    <label>Playlist
+      <select name="playlist">
+        <option value="">Toutes les playlists</option>
+        {% for p in playlists_flat if p.depth == 0 and (not facets or p.id in facets.playlist_ids or playlist_id == p.id) %}
+        <option value="{{ p.id }}" {{ 'selected' if playlist_id == p.id }}>{{ p.name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+
+    <label>Sous-playlist
+      <select name="subplaylist">
+        <option value="">Toutes les sous-playlists</option>
+        {% for p in playlists_flat if p.depth > 0
+           and (not facets or p.id in facets.playlist_ids or playlist_id == p.id)
+           and (not playlist_root_id or p.root_id == playlist_root_id or playlist_id == p.id) %}
+        <option value="{{ p.id }}" {{ 'selected' if playlist_id == p.id }}>{{ p.path }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    {% endif %}
+
+    <label>Note minimum
+      <select name="rating_min">
+        <option value="" {{ 'selected' if not rating_min }}>Toutes les notes</option>
+        {% for i in range(1, 6) if not facets or i <= facets.max_rating or rating_min == i %}
+        <option value="{{ i }}" {{ 'selected' if rating_min == i }}>{{ '★' * i }}+ </option>
+        {% endfor %}
+      </select>
+    </label>
+
+    <label>Durée min (min)
+      <input type="number" name="duration_min" min="0" value="{{ duration_min or '' }}">
+    </label>
+    <label>Durée max (min)
+      <input type="number" name="duration_max" min="0" value="{{ duration_max or '' }}">
+    </label>
+    <label>Taille min (Mo)
+      <input type="number" name="size_min" min="0" value="{{ size_min or '' }}">
+    </label>
+    <label>Taille max (Mo)
+      <input type="number" name="size_max" min="0" value="{{ size_max or '' }}">
+    </label>
+    <label>Résolution
+      <select name="resolution">
+        <option value="" {{ 'selected' if not resolution }}>Toutes</option>
+        {% if not facets or 'sd' in facets.resolutions or resolution == 'sd' %}
+        <option value="sd" {{ 'selected' if resolution == 'sd' }}>SD (&lt;720p)</option>
+        {% endif %}
+        {% if not facets or 'hd' in facets.resolutions or resolution == 'hd' %}
+        <option value="hd" {{ 'selected' if resolution == 'hd' }}>HD (720p)</option>
+        {% endif %}
+        {% if not facets or 'fhd' in facets.resolutions or resolution == 'fhd' %}
+        <option value="fhd" {{ 'selected' if resolution == 'fhd' }}>Full HD+ (1080p+)</option>
+        {% endif %}
+      </select>
+    </label>
+
+    <label>Date de la vidéo — de
+      <input type="date" name="date_from" value="{{ date_from or '' }}">
+    </label>
+    <label>Date de la vidéo — à
+      <input type="date" name="date_to" value="{{ date_to or '' }}">
+    </label>
+
+    <label class="checkbox-field">
+      <input type="checkbox" name="has_comment" value="1" {{ 'checked' if has_comment == '1' }}>
+      Avec commentaire uniquement
+    </label>
+
+    <label class="checkbox-field">
+      <input type="checkbox" name="favorite_only" value="1" {{ 'checked' if favorite_only == '1' }}>
+      ♥ Favoris uniquement
+    </label>
+
+    <button type="submit">Filtrer</button>
+    {% if any_filter %}
+    <a href="{{ request.path }}?reset=1" class="reset-filters-link">✕ Réinitialiser les filtres</a>
+    <span class="filters-dynamic-hint">Les autres champs s'adaptent automatiquement à ce qui est déjà filtré.</span>
+    {% endif %}
+  </form>
+{% if not bare %}
+</details>
+{% endif %}

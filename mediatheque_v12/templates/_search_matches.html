@@ -1,0 +1,58 @@
+{# Partial réutilisé par index.html, category.html et playlist.html.
+   Affiche, quand une recherche texte libre "q" est active, les catégories,
+   playlists et sous-playlists dont le nom correspond — regroupées par
+   type, chacune sous son propre titre, sous forme de cases avec photo de
+   couverture (même technique "letterbox" que .org-cover-frame : la photo
+   n'est JAMAIS rognée ni débordante, quel que soit son format d'origine).
+   Les vidéos correspondantes sont affichées juste après (grille existante
+   de _video_grid.html) : on ajoute ici un titre "Vidéos" au-dessus d'elle
+   pour que le classement par type de donnée soit clair d'un bout à l'autre.
+   Variable attendue : search_matches (dict avec categories/playlists/
+   subplaylists), q. N'affiche rien si q est vide. #}
+{% macro match_card(m, icon) %}
+<a class="search-match-card" href="{{ m.url }}">
+  <div class="search-match-cover">
+    {% if m.image_url %}
+      <img class="search-match-cover-bg" src="{{ m.image_url }}" alt="" aria-hidden="true">
+      <img class="search-match-cover-main" src="{{ m.image_url }}" alt="">
+    {% else %}
+      <span class="search-match-cover-placeholder">{{ icon }}</span>
+    {% endif %}
+  </div>
+  <span class="search-match-label">{{ m.name }}</span>
+</a>
+{% endmacro %}
+{% if q %}
+  {% set has_other_matches = search_matches and (search_matches.categories or search_matches.playlists or search_matches.subplaylists) %}
+  {% if has_other_matches %}
+  <div class="search-matches">
+    {% if search_matches.categories %}
+    <div class="search-match-group">
+      <h3 class="search-match-heading">🗂 Catégories</h3>
+      <div class="search-match-grid">
+        {% for m in search_matches.categories %}{{ match_card(m, "🗂") }}{% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if search_matches.playlists %}
+    <div class="search-match-group">
+      <h3 class="search-match-heading">📁 Playlists</h3>
+      <div class="search-match-grid">
+        {% for m in search_matches.playlists %}{{ match_card(m, "📁") }}{% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if search_matches.subplaylists %}
+    <div class="search-match-group">
+      <h3 class="search-match-heading">📁 Sous-playlists</h3>
+      <div class="search-match-grid">
+        {% for m in search_matches.subplaylists %}{{ match_card(m, "📁") }}{% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  <h3 class="search-match-heading search-match-heading-videos">🎬 Vidéos</h3>
+  {% endif %}
+{% endif %}

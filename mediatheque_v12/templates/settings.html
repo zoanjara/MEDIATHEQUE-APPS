@@ -1,0 +1,338 @@
+{% extends "base.html" %}
+{% block title %}Paramètres{% endblock %}
+{% block content %}
+<h1 class="page-title">⚙ Paramètres</h1>
+<p class="muted" style="margin-top:-6px;margin-bottom:12px;">Application conçue pour <strong>Windows</strong> uniquement.</p>
+
+<section class="settings-security-banner" style="margin:16px 0;padding:14px 16px;border-radius:12px;border:1px solid var(--border);background:color-mix(in srgb, #e85d5d 12%, var(--bg));">
+  <h2 style="margin:0 0 8px;font-size:1rem;">🔒 Sécurité réseau</h2>
+  <p style="margin:0 0 6px;font-size:0.9rem;">
+    Par défaut, Médiathèque écoute sur <code>0.0.0.0</code> (accessible depuis le réseau local).
+    <strong>Il n’y a pas de mot de passe</strong> : toute personne sur le même réseau peut voir et modifier la bibliothèque, et éventuellement supprimer des fichiers.
+  </p>
+  <p style="margin:0;font-size:0.85rem;" class="muted">
+    Pour restreindre à cet ordinateur uniquement : dans <code>config.py</code>, mets
+    <code>HOST = "127.0.0.1"</code> puis relance <code>run.bat</code>.
+  </p>
+</section>
+
+
+<section class="guide-block" id="guide">
+  <h2>📖 Guide rapide — installer et utiliser l'application</h2>
+  <p class="guide-intro">
+    Tout est expliqué en détail dans <code>README.md</code> (à la racine du projet),
+    mais voici l'essentiel, dans l'ordre, directement ici. Clique sur une étape pour la déplier.
+  </p>
+  <nav class="guide-toc">
+    <a href="#section-dossiers">① Dossiers</a>
+    <a href="#section-scan">② Scanner</a>
+    <a href="#section-disques">③ Disques actifs</a>
+    <a href="#section-backup-projet">④ Sauvegarde complète</a>
+    <a href="#section-export-import">⑤ Export/Import</a>
+  </nav>
+
+  <details class="guide-step" open>
+    <summary><span class="guide-step-num">1</span> Installer l'application (une seule fois)</summary>
+    <div class="guide-step-body">
+      <ol>
+        <li>Installe <strong>Python 3.10 ou plus récent</strong> (<a href="https://www.python.org/downloads/" target="_blank" rel="noopener">python.org/downloads</a>) —
+          coche bien <strong>« Add python.exe to PATH »</strong> pendant l'installation, sinon rien ne fonctionnera.</li>
+        <li>Double-clique sur <code>install.bat</code> (dans le dossier de l'application). Il crée un
+          environnement isolé et installe tout ce qu'il faut (nécessite Internet une seule fois).</li>
+        <li>Les vignettes fonctionnent dès l'installation (ffmpeg est embarqué automatiquement). Pour la
+          <strong>durée/résolution des vidéos</strong>, un ffmpeg complet installé séparément est
+          recommandé — voir <code>README.md</code> si les durées n'apparaissent pas après un scan.</li>
+      </ol>
+      <div class="guide-note">
+        Rien de tout ceci ne touche Internet au quotidien ensuite : l'application tourne 100% en local
+        sur ce PC, aucune vidéo n'est jamais envoyée où que ce soit.
+      </div>
+    </div>
+  </details>
+
+  <details class="guide-step">
+    <summary><span class="guide-step-num">2</span> Lancer et ajouter tes vidéos</summary>
+    <div class="guide-step-body">
+      <ol>
+        <li>Double-clique sur <code>run.bat</code> à chaque utilisation. Le navigateur s'ouvre tout seul.</li>
+        <li>Descends jusqu'à <a href="#section-dossiers">« Dossiers de la bibliothèque »</a> ci-dessous et
+          ajoute le ou les dossiers qui contiennent tes vidéos (ex. <code>D:\Videos</code> ou un chemin
+          réseau <code>\\NAS\Partage\Videos</code>).</li>
+        <li>Clique sur <a href="#section-scan">« Lancer le scan »</a>. Une barre de progression s'affiche —
+          la première fois peut prendre du temps sur une grosse bibliothèque (génération des vignettes),
+          les scans suivants sont rapides (seuls les fichiers nouveaux/modifiés sont retraités).</li>
+        <li>C'est tout : parcours, cherche, note, tague et range tes vidéos en catégories/playlists.</li>
+      </ol>
+      <div class="guide-note">
+        Le scan est en <strong>lecture seule</strong> : aucun fichier vidéo n'est jamais modifié, déplacé
+        ou supprimé, quoi qu'il arrive.
+      </div>
+    </div>
+  </details>
+
+  <details class="guide-step">
+    <summary><span class="guide-step-num">3</span> Un disque externe est débranché ?</summary>
+    <div class="guide-step-body">
+      <p>
+        Pas besoin de rescanner ni de rien supprimer. Va dans
+        <a href="#section-disques">« Disques actifs »</a> et décoche-le : ses vidéos disparaissent
+        instantanément partout dans l'appli. Une fois le disque rebranché, recoche-le (ou attends le
+        prochain scan) pour tout faire réapparaître.
+      </p>
+    </div>
+  </details>
+
+  <details class="guide-step">
+    <summary><span class="guide-step-num">4</span> Sauvegarder ou changer de PC — quelle option choisir ?</summary>
+    <div class="guide-step-body">
+      <p>Deux options existent plus bas, pour deux besoins différents :</p>
+      <div class="guide-compare">
+        <div>
+          <h4>⬇ Sauvegarde complète (.zip)</h4>
+          <p>
+            Copie <strong>tout</strong> : l'application + la base de données + les vignettes + les
+            réglages. Idéal pour changer de PC ou faire une sauvegarde complète « au cas où ». Sur le
+            nouveau PC : dézippe, installe Python/ffmpeg (étape 1), lance <code>run.bat</code> — la
+            bibliothèque est immédiatement identique.
+          </p>
+        </div>
+        <div>
+          <h4>⬇ Export / Import bibliothèque (.zip)</h4>
+          <p>
+            Copie seulement les <strong>métadonnées</strong> (catégories, tags, playlists, notes,
+            commentaires...) et les <strong>images de couverture</strong> — pas la base entière ni les
+            vignettes. Utile pour fusionner ou migrer des métadonnées vers une installation qui a déjà
+            été scannée séparément.
+          </p>
+        </div>
+      </div>
+      <div class="guide-note">
+        En résumé : pour dupliquer l'appli telle quelle sur un autre PC → sauvegarde complète.
+        Pour ne récupérer que les notes/tags/playlists sur une bibliothèque déjà scannée ailleurs →
+        export/import.
+      </div>
+    </div>
+  </details>
+
+  <details class="guide-step">
+    <summary><span class="guide-step-num">5</span> Comment utiliser l'Export / Import</summary>
+    <div class="guide-step-body">
+      <ol>
+        <li>Sur le PC source : va dans <a href="#section-export-import">« Export / Import de bibliothèque »</a>
+          et clique sur <strong>« Exporter la bibliothèque »</strong> — un fichier <code>.zip</code> se
+          télécharge (métadonnées + images de couverture).</li>
+        <li><strong>Sur le PC de destination, scanne d'abord</strong> (étape 2) pour rattacher un
+          maximum d'infos immédiatement. Le chemin des fichiers peut être différent : l'app utilise
+          aussi l'empreinte de contenu, le nom de fichier et la taille.</li>
+        <li>Utilise ensuite <strong>« Importer un fichier »</strong> et choisis le
+          <code>.zip</code> de l'étape 1.</li>
+        <li>Les vidéos pas encore scannées restent <strong>en attente</strong> : un prochain scan
+          leur réattribue automatiquement leurs métadonnées.</li>
+      </ol>
+      <div class="guide-note">
+        Sans danger : l'import ne supprime jamais rien, il fusionne seulement. L'interface se
+        rafraîchit en temps réel. Aucune exception non gérée ne doit faire planter l'application.
+      </div>
+    </div>
+  </details>
+</section>
+
+<section class="settings-block" id="section-dossiers">
+  <h2>Dossiers de la bibliothèque</h2>
+  <p class="muted">Ajoute un ou plusieurs dossiers (chemins locaux ou réseau, ex. <code>D:\Videos</code> ou <code>\\NAS\Videos</code>). Le scan est en lecture seule : aucun fichier n'est jamais modifié ni déplacé.</p>
+  <ul class="folder-list">
+    {% for f in settings.media_folders %}
+    <li>
+      <span>{{ f }}</span>
+      <form action="{{ url_for('settings_view') }}" method="post">
+        <input type="hidden" name="action" value="remove_folder">
+        <input type="hidden" name="folder" value="{{ f }}">
+        <button type="submit" class="danger small">Retirer</button>
+      </form>
+    </li>
+    {% else %}
+    <li class="muted">Aucun dossier configuré pour l'instant.</li>
+    {% endfor %}
+  </ul>
+  <form action="{{ url_for('settings_view') }}" method="post" class="inline-form" id="add-folder-form">
+    <input type="hidden" name="action" value="add_folder">
+    <input type="text" name="folder" id="add-folder-input" placeholder="ex: D:\Videos ou \\NAS\Partage\Videos" required style="min-width: 320px;">
+    <button type="button" id="browse-folder-btn" class="btn-secondary" title="Ouvrir la fenêtre Windows de sélection de dossier">📂 Parcourir…</button>
+    <button type="submit">Ajouter</button>
+  </form>
+  <p class="muted browse-folder-status" id="browse-folder-status" hidden></p>
+</section>
+
+<section class="settings-block" id="section-scan">
+  <div class="scan-card">
+    <div class="scan-card-header">
+      <span class="scan-card-icon" aria-hidden="true">🔍</span>
+      <div class="scan-card-heading">
+        <h2>Scanner la bibliothèque</h2>
+        <p class="muted">Analyse tous les dossiers ci-dessus, détecte les nouvelles vidéos (ou celles modifiées) et génère les vignettes. Les vidéos déjà indexées et inchangées sont ignorées, donc les scans suivants sont rapides.</p>
+      </div>
+    </div>
+
+    <form action="{{ url_for('settings_view') }}" method="post" class="scan-card-action">
+      <input type="hidden" name="action" value="start_scan">
+      <button type="submit" id="scan-btn" class="btn-primary btn-scan">
+        <span class="btn-scan-icon" aria-hidden="true">▶</span>
+        <span>Lancer le scan</span>
+      </button>
+    </form>
+
+    <div id="scan-progress" class="scan-progress" style="display:none;">
+      <div class="scan-progress-head">
+        <span id="scan-phase-icon" class="scan-phase-icon" aria-hidden="true">⏳</span>
+        <span id="scan-text" class="scan-text"></span>
+        <span id="scan-percent" class="scan-percent"></span>
+      </div>
+      <div class="progress-bar progress-bar-lg">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section class="settings-block" id="section-disques">
+  <h2>Disques actifs</h2>
+  <p class="muted">Décoche un disque pour masquer instantanément ses vidéos partout (catégories, playlists, sous-playlists, tags, recherche) sans avoir à le débrancher. Recoche-le pour tout faire réapparaître. Aucun scan n'est nécessaire pour ce réglage — il faut juste avoir scanné le disque au moins une fois auparavant.</p>
+  {% if settings.media_folders %}
+  <form id="disk-filter-form" action="{{ url_for('settings_view') }}" method="post" class="inline-form" style="flex-direction:column; align-items:flex-start; gap:10px;">
+    <input type="hidden" name="action" value="set_disk_filter">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    {% for f in settings.media_folders %}
+    <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+      <input type="checkbox"
+             name="enabled_folder"
+             value="{{ f }}"
+             data-folder="{{ f }}"
+             {% if f not in settings.disabled_folders %}checked{% endif %}
+             onchange="this.form.requestSubmit()">
+      <span>{{ f }}</span>
+    </label>
+    {% endfor %}
+    <span id="disk-filter-status" class="muted" aria-live="polite" style="margin-top:4px;"></span>
+  </form>
+  {% else %}
+  <p class="muted">Aucun dossier configuré pour l'instant.</p>
+  {% endif %}
+</section>
+
+{# Disques actifs : static/js/disk-filter.js (chargé dans base.html). #}
+
+<section class="settings-block" id="section-backup-projet">
+  <h2>Sauvegarde complète du projet</h2>
+  <p class="muted">
+    Télécharge un fichier .zip unique contenant tout : l'application elle-même
+    (code, pages, styles) et toutes les données de la bibliothèque (base de
+    données, vignettes, images de catégories/playlists/tags, réglages).
+    Pour installer sur un autre PC : dézippe l'archive, installe Python et
+    ffmpeg si besoin (voir README.md), puis lance <code>run.bat</code> —
+    la bibliothèque est immédiatement là, telle qu'au moment de la sauvegarde.
+    Les vidéos elles-mêmes ne sont pas incluses (elles restent sur leurs
+    disques ; un scan les retrouve automatiquement si les chemins des dossiers
+    sont identiques sur le nouveau PC, sinon il suffit de les rajouter
+    ci-dessus).
+  </p>
+  <div class="inline-form">
+    <a href="{{ url_for('project_backup') }}" class="button-link">⬇ Télécharger la sauvegarde complète (.zip)</a>
+  </div>
+</section>
+
+<section class="settings-block" id="section-export-import">
+  <h2>Export / Import de bibliothèque</h2>
+  <p class="muted">
+    Sauvegarde ou migre les métadonnées de la bibliothèque (catégories, tags,
+    playlists et leur contenu, notes, favoris, commentaires, titres personnalisés...)
+    ET leurs images de couverture, dans une archive .zip (JSON lisible + images),
+    indépendante du fichier SQLite brut. Les vidéos elles-mêmes ne sont ni incluses
+    ni modifiées ; seules les images de couverture (pas les vignettes générées par
+    le scan) sont incluses.
+  </p>
+  <div class="inline-form">
+    <a href="{{ url_for('library_export') }}" class="button-link">⬇ Exporter la bibliothèque (.zip)</a>
+  </div>
+  <p class="muted" style="margin-top:12px; font-size:1.35em; line-height:1.5;"><strong>Conseil :</strong> scanner d'abord (ci-dessus) pour rattacher un maximum d'infos tout de suite. Si des vidéos manquent encore, leurs métadonnées restent <strong>en attente</strong> et seront réattribuées <strong>automatiquement au prochain scan</strong> — le chemin exact n'a pas d'importance.</p>
+  <form action="{{ url_for('library_import') }}" method="post" enctype="multipart/form-data" class="inline-form" style="margin-top:12px;">
+    <input type="file" name="library_file" accept="application/zip,.zip,application/json,.json" required>
+    <button type="submit">⬆ Importer un fichier (.zip ou .json)</button>
+  </form>
+  <p class="muted" style="margin-top:8px;">
+    L'import <strong>fusionne</strong> sans jamais supprimer. Correspondance (du plus sûr au plus souple) :
+    chemin exact → chemin normalisé → empreinte de contenu → nom + dossier → nom + taille →
+    nom de fichier (avec ou sans extension). Les vidéos pas encore scannées sont mises en
+    file d'attente et rattachées dès qu'elles apparaissent. Les anciens exports .json
+    (sans images) restent acceptés. L'interface se met à jour en temps réel après l'import.
+  </p>
+</section>
+
+<section class="settings-block">
+  <h2>Navigateur de lancement</h2>
+  <p class="muted">Choisis le navigateur qui s'ouvrira automatiquement au démarrage de l'application. Seuls les navigateurs détectés sur cet ordinateur sont proposés. Redémarre l'application (run.bat) pour appliquer le changement.</p>
+  <form action="{{ url_for('settings_view') }}" method="post" class="inline-form">
+    <input type="hidden" name="action" value="set_browser">
+    <select name="browser">
+      {% for b in browsers %}
+      <option value="{{ b.id }}" {% if settings.browser == b.id %}selected{% endif %}>{{ b.label }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit">Enregistrer</button>
+  </form>
+</section>
+
+<section class="settings-block">
+  <h2>Informations techniques</h2>
+  <p class="muted">ffmpeg utilisé : <code>{{ ffmpeg }}</code></p>
+  <p class="muted">ffprobe utilisé : <code>{{ ffprobe }}</code></p>
+  <p class="muted">Si aucune vignette n'apparaît après un scan, vérifie qu'ffmpeg est bien installé et accessible (voir README.md).</p>
+</section>
+
+<script>
+function pollScanStatus() {
+  fetch("{{ url_for('scan_status') }}").then(r => r.json()).then(s => {
+    const box = document.getElementById('scan-progress');
+    const btn = document.getElementById('scan-btn');
+    const icon = document.getElementById('scan-phase-icon');
+    const percent = document.getElementById('scan-percent');
+    // Classes purement cosmétiques (couleur/animation de la carte selon
+    // l'état) : n'affectent jamais la logique de statut ci-dessous, qui
+    // reste exactement celle d'avant (mêmes champs, mêmes conditions).
+    box.classList.remove('is-running', 'is-done', 'is-error');
+    if (s.running || s.phase === 'processing' || s.phase === 'listing') {
+      box.style.display = 'block';
+      box.classList.add('is-running');
+      btn.disabled = true;
+      icon.textContent = '⏳';
+      const pct = s.total_found ? Math.round(100 * s.processed / s.total_found) : 0;
+      document.getElementById('progress-fill').style.width = pct + '%';
+      percent.textContent = s.phase === 'listing' ? '' : pct + '%';
+      document.getElementById('scan-text').textContent =
+        s.phase === 'listing' ? 'Recherche des fichiers vidéo...' :
+        `${s.processed} / ${s.total_found} traitées (${s.new} nouvelles, ${s.updated} mises à jour)`;
+      setTimeout(pollScanStatus, 1000);
+    } else {
+      btn.disabled = false;
+      if (s.phase === 'done' && s.finished_at) {
+        box.style.display = 'block';
+        box.classList.add('is-done');
+        icon.textContent = '✅';
+        percent.textContent = '100%';
+        document.getElementById('progress-fill').style.width = '100%';
+        document.getElementById('scan-text').textContent =
+          `Terminé : ${s.new} nouvelles vidéos, ${s.updated} mises à jour.`;
+      }
+      if (s.phase === 'error') {
+        box.style.display = 'block';
+        box.classList.add('is-error');
+        icon.textContent = '⚠';
+        percent.textContent = '';
+        document.getElementById('scan-text').textContent = 'Erreur : ' + s.error;
+      }
+    }
+  });
+}
+pollScanStatus();
+</script>
+{% endblock %}

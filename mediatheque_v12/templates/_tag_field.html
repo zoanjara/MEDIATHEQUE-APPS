@@ -1,0 +1,42 @@
+{# Champ "Tags" pour "✎ Modifier les métadonnées" (popup rapide + page vidéo
+   dédiée) : chaque tag déjà associé à la vidéo apparaît sous forme de puce
+   (mot + photo, si le tag en a une). Contrairement au champ "Playlists"
+   (voir _playlist_field.html), TOUT — mots ET photos — se fait ici : on peut
+   taper un nouveau mot de tag (Entrée ou virgule pour le valider, avec
+   auto-complétion sur les tags existants) ET cliquer/glisser une image
+   directement sur une puce pour lui en donner une, en un seul endroit, sans
+   quitter ce panneau. Les photos ne sont réellement envoyées au serveur
+   qu'à l'enregistrement du formulaire englobant (voir static/js/main.js,
+   appendPendingTagImages) — jamais séparément — pour rester cohérent avec
+   le principe "un seul bouton Enregistrer" du reste de l'appli. #}
+{% macro tag_field(field_id, selected=None) %}
+<div class="tag-field-modern js-tag-field" data-field-id="{{ field_id }}">
+  <input type="hidden" name="tags" class="js-tag-hidden-value" value="{{ (selected or [])|map(attribute='name')|join(', ') }}">
+
+  <div class="tag-field-chips js-tag-chips">
+    <span class="tag-chips-empty muted" {{ 'hidden' if selected }}>Aucun tag pour le moment</span>
+    {% for t in selected or [] %}
+    <span class="tag-chip" data-tag-id="{{ t.id }}" data-tag-name="{{ t.name }}">
+      <label class="org-image-slot tag-chip-img-slot" title="Cliquer ou glisser une image pour ce tag">
+        {% if t.image1 %}<img src="{{ url_for('tag_image', filename=t.image1) }}" alt="">{% else %}<span class="org-image-placeholder tag-chip-img-placeholder">🖼</span>{% endif %}
+        <input type="file" accept="image/*" hidden>
+      </label>
+      <span class="tag-chip-name">{{ t.name }}</span>
+      <button type="button" class="tag-chip-remove js-tag-chip-remove" title="Retirer ce tag de cette vidéo">✕</button>
+      <button type="button" class="tag-chip-delete js-delete" data-type="tag" data-id="{{ t.id }}" data-name="{{ t.name }}" title="Supprimer définitivement le tag « {{ t.name }} » de la base">🗑</button>
+    </span>
+    {% endfor %}
+  </div>
+
+  <div class="tag-field-add-row">
+    <input type="text" class="js-tag-input" list="tag-datalist-{{ field_id }}"
+           placeholder="Rechercher ou créer un tag…" autocomplete="off"
+           aria-autocomplete="list" aria-expanded="false" role="combobox">
+    <datalist id="tag-datalist-{{ field_id }}">
+      {% if nav_tags %}{% for t in nav_tags %}<option value="{{ t.name }}">{% endfor %}{% endif %}
+    </datalist>
+    <div class="tag-suggest-box js-tag-suggest-box" hidden role="listbox"></div>
+  </div>
+  <p class="tag-field-hint field-hint">💡 Suggestions en direct pour éviter les doublons · image : clic ou glisser-déposer sur une puce</p>
+</div>
+{% endmacro %}

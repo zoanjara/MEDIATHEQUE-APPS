@@ -1,0 +1,34 @@
+{# Carte d'un tag dans la fenêtre "🏷 Tags" (voir base.html) : vignette
+   cliquable/glissable pour changer l'image (enregistrement immédiat, sans
+   bouton "Enregistrer" séparé — voir static/js/main.js, initTagsModal /
+   uploadTagImageInstant), et nom modifiable directement en ligne (clic sur
+   le crayon). Même structure que le <template id="tag-card-template"> de
+   base.html, utilisé lui pour insérer une nouvelle carte côté JS après une
+   création rapide — les deux doivent rester alignés. #}
+<div class="org-card org-card-tag tag-card-modern" data-name="{{ t.name|lower }}" data-count="{{ t.n }}" data-has-photo="{{ '1' if t.image1 else '0' }}">
+  <div class="tag-card-actions">
+    <button type="button" class="icon-btn icon-btn-mini js-tag-inline-rename" data-id="{{ t.id }}" data-name="{{ t.name }}" title="Renommer le tag">✎</button>
+    <button type="button" class="icon-btn icon-btn-mini icon-btn-danger js-delete org-card-delete" data-type="tag" data-id="{{ t.id }}" data-name="{{ t.name }}" title="Supprimer le tag">✕</button>
+  </div>
+
+  <label class="tag-card-cover js-tag-instant-upload" data-tag-id="{{ t.id }}" title="Cliquer ou glisser une image ici">
+    {% if t.image1 %}
+      <img class="org-cover-bg" src="{{ url_for('tag_image', filename=t.image1) }}" alt="" aria-hidden="true">
+      <img class="org-cover-main" src="{{ url_for('tag_image', filename=t.image1) }}" alt="">
+    {% else %}
+      <span class="org-cover-placeholder muted tag-card-placeholder">🏷 {{ t.name }}</span>
+    {% endif %}
+    <span class="tag-card-cover-hint">🖼 Changer l'image</span>
+    <span class="tag-card-count-badge org-card-count">{{ t.n }}</span>
+    <input type="file" accept="image/*" hidden>
+  </label>
+
+  <a href="{{ url_for('tag_view', tag_id=t.id) }}" class="org-card-link tag-card-link">
+    <div class="org-card-head">
+      <div class="org-card-title tag-card-title-wrap">
+        <strong class="js-tag-name-display">{{ t.name }}</strong>
+      </div>
+      <span class="org-card-count tag-card-count-text muted">{{ t.n }} vidéo{{ 's' if t.n != 1 else '' }}</span>
+    </div>
+  </a>
+</div>

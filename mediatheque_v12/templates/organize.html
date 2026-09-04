@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+{% block title %}{{ page_heading }} — Médiathèque{% endblock %}
+
+{% macro stars_select(current) %}
+<select name="rating">
+  <option value="0" {{ 'selected' if not current }}>Sans note</option>
+  {% for i in range(1, 6) %}
+  <option value="{{ i }}" {{ 'selected' if current == i }}>{{ '★' * i }}{{ '☆' * (5 - i) }}</option>
+  {% endfor %}
+</select>
+{% endmacro %}
+
+{% macro entity_card(item, kind, edit_endpoint, image_endpoint, view_endpoint, parent_options=none) %}
+<div class="org-card org-card-modern {{ 'org-card-sub' if item.depth }}" data-name="{{ item.name|lower }}" data-rating="{{ item.rating or 0 }}" data-count="{{ item.n }}" data-created="{{ (item.manual_creation_date if (item.parent_id and item.manual_creation_date) else item.created_at) or '' }}" data-has-photo="{{ '1' if (item.image1 or item.image2 or item.image3) else '0' }}" data-has-comment="{{ '1' if item.comment else '0' }}" {% if item.depth %}style="margin-left: {{ item.depth * 26 }}px"{% endif %}>
+  {% if item.depth %}<span class="org-card-sub-marker" title="Sous-playlist">↳</span>{% endif %}
+  <div class="org-card-actions">
+    <button type="button" class="icon-btn icon-btn-mini icon-btn-danger js-delete org-card-delete" data-type="{{ kind }}" data-id="{{ item.id }}" data-name="{{ item.name }}" title="Supprimer">✕</button>
+  </div>
+
+  {# Couverture HORS du lien : clic/glisser = upload image (comme Tags).
+     Le titre reste cliquable pour ouvrir la page catégorie/playlist. #}
+  <div class="org-images-preview">
+    <label class="org-cover-frame js-org-instant-upload"
+           data-entity-type="{{ kind }}"
+           data-entity-id="{{ item.id }}"
+           title="Cliquer ou glisser une image ici">
+      {% set cover = item.image1 or item.image2 or item.image3 %}
+      {% if cover %}
+        <img class="org-cover-bg" src="{{ url_for(image_endpoint, filename=cover) }}" alt="" aria-hidden="true">
+        <img class="org-cover-main" src="{{ url_for(image_endpoint, filename=cover) }}" alt="">
+      {% else %}
+        <span class="org-cover-placeholder muted">{% if kind == 'category' %}🗂{% else %}📃{% endif %}</span>
+      {% endif %}
+      <span class="org-cover-upload-hint">🖼 Changer la photo</span>
+      <span class="org-card-count-badge">{{ item.n }}</span>
+      <span class="org-play-overlay" data-play-url="{{ url_for(kind ~ '_play', **{kind ~ '_id': item.id}) }}" role="button" tabindex="0" title="Lire" aria-label="Lire {{ item.name }}"><span class="org-play-icon"></span></span>
+      <input type="file" accept="image/*" hidden>
+    </label>
+  </div>
+  <a href="{{ url_for(view_endpoint, **{kind ~ '_id': item.id}) }}" class="org-card-link">
+    <div class="org-card-head">
+      <div class="org-card-title">
+        <strong>{{ item.name }}</strong>
+        <span class="org-stars-display" title="Note actuelle">
+          {% if item.rating %}{{ '★' * item.rating }}{{ '☆' * (5 - item.rating) }}{% else %}<span class="muted">Sans note</span>{% endif %}
+        </span>
+      </div>
+      <span class="org-card-count muted">{{ item.n }} vidéo{{ 's' if item.n != 1 else '' }}</span>
+    </div>
+    {# Pour une sous-playlist, la date affichée ici serait la date technique
+       de création en base (created_at), distincte de la date de création
+       éditable (manual_creation_date, voir le bloc "📅 Créée le" ci-dessous
+       et le champ "Date de création (obligatoire pour une sous-playlist)"
+       dans le formulaire de modification). Afficher les deux créait une
+       ambiguïté (2 dates différentes pour la même carte) : on n'affiche donc
+       ici la date technique QUE pour les catégories et les playlists
+       principales, qui n'ont pas de date manuelle éditable. #}
+    {% if item.created_at and not (kind == 'playlist' and item.parent_id) %}<div class="org-card-created muted">Créée le {{ item.created_at[:10]|frdate }}</div>{% endif %}
+  </a>
+
+  {% if item.comment %}<p class="org-comment-preview">💬 {{ item.comment }}</p>{% endif %}
+  {% if kind == 'playlist' and item.parent_id and item.manual_creation_date %}
+  <div class="org-card-manual-date muted">📅 Créée le {{ item.manual_creation_date|frdate }}</div>
+  {% endif %}
+
+  <details class="org-card-edit">
+    <summary>✎ Modifier titre, photo, note, commentaire</summary>
+    <form action="{{ url_for(edit_endpoint, **{kind ~ '_id': item.id}) }}" method="post" enctype="multipart/form-data" class="org-edit-form">
+      <input type="hidden" name="ajax" value="1">
+      <label class="field-full">Titre
+        <input type="text" name="name" value="{{ item.name }}" required>
+      </label>
+      <label>Note
+        {{ stars_select(item.rating) }}
+      </label>
+      {% if kind == 'playlist' %}
+      <label class="field-full js-manual-date-label" {{ '' if item.parent_id else 'hidden' }}>
+        Date de création <span class="field-hint">(obligatoire pour une sous-playlist)</span>
+        <input type="date" name="manual_creation_date" class="js-manual-date-input" value="{{ item.manual_creation_date or '' }}" {{ 'required' if item.parent_id else '' }}>
+      </label>
+      {% endif %}
+      {% if parent_options is not none %}
+      <label class="field-full">Playlist parente <span class="field-hint">(pour en faire une sous-playlist)</span>
+        <select name="parent_id">
+          <option value="">— Aucune (playlist principale) —</option>
+          {% for po in parent_options %}
+            {% if po.id != item.id and po.depth == 0 %}
+            <option value="{{ po.id }}" {{ 'selected' if item.parent_id == po.id }}>{{ po.name }}</option>
+            {% endif %}
+          {% endfor %}
+        </select>
+        <span class="field-hint">2 niveaux maximum : une sous-playlist ne peut pas devenir la parente d'une autre.</span>
+      </label>
+      {% endif %}
+      <label class="field-full">Commentaire
+        <textarea name="comment" rows="2" placeholder="Aucun commentaire...">{{ item.comment or '' }}</textarea>
+      </label>
+      <label class="field-full">Photo de couverture</label>
+      <div class="field-full org-images-edit">
+        <label class="org-image-slot org-image-slot-single">
+          {% if item.image1 %}<img src="{{ url_for(image_endpoint, filename=item.image1) }}" alt="">{% else %}<span class="org-image-placeholder">🖼 Ajouter une photo de couverture</span>{% endif %}
+          <input type="file" name="image1" accept="image/*">
+        </label>
+      </div>
+      <div class="field-full">
+        <button type="submit" class="btn-primary">✓ Enregistrer</button>
+      </div>
+    </form>
+  </details>
+</div>
+{% endmacro %}
+
+
+{% macro toolbar(list_id, noun, show_created=false) %}
+{# Barre moderne toujours visible (comme Tags) : mêmes classes JS
+   (org-filter-input, org-rating-filter, org-sort-select…) pour ne pas
+   casser initOrganizeGrids. #}
+<div class="organize-toolbar organize-toolbar-modern">
+  <div class="org-search-wrap">
+    <span class="org-search-icon" aria-hidden="true">🔍</span>
+    <input type="search" class="org-filter-input org-search-input" data-list="{{ list_id }}"
+           placeholder="Rechercher {{ noun }}…" autocomplete="off">
+  </div>
+  <select class="org-rating-filter org-toolbar-select" data-list="{{ list_id }}" title="Filtrer par note" aria-label="Note">
+    <option value="0">Toutes notes</option>
+    <option value="5">★★★★★</option>
+    <option value="4">★★★★+</option>
+    <option value="3">★★★+</option>
+    <option value="2">★★+</option>
+    <option value="1">★+</option>
+    <option value="none">Sans note</option>
+  </select>
+  {% if show_created %}
+  <select class="org-photo-filter org-toolbar-select" data-list="{{ list_id }}" title="Photo" aria-label="Photo">
+    <option value="0">Photo : toutes</option>
+    <option value="yes">Avec photo</option>
+    <option value="no">Sans photo</option>
+  </select>
+  <select class="org-comment-filter org-toolbar-select" data-list="{{ list_id }}" title="Commentaire" aria-label="Commentaire">
+    <option value="0">Comment. : tous</option>
+    <option value="yes">Avec comment.</option>
+    <option value="no">Sans comment.</option>
+  </select>
+  <div class="org-date-range org-date-range-inline" title="Date de création">
+    <input type="date" class="org-created-filter-from" data-list="{{ list_id }}" title="Créée depuis le">
+    <span class="org-date-range-sep">→</span>
+    <input type="date" class="org-created-filter-to" data-list="{{ list_id }}" title="Créée jusqu'au">
+  </div>
+  {% endif %}
+  <select class="org-sort-select org-toolbar-select" data-list="{{ list_id }}" title="Trier" aria-label="Trier">
+    <option value="name-asc">A → Z</option>
+    <option value="name-desc">Z → A</option>
+    <option value="rating-desc">Meilleure note</option>
+    <option value="count-desc">Plus de vidéos</option>
+    {% if show_created %}
+    <option value="created-desc">Création (récente)</option>
+    <option value="created-asc">Création (ancienne)</option>
+    {% endif %}
+  </select>
+  {% if show_created %}
+  <select class="org-created-sort-select org-toolbar-select" data-list="{{ list_id }}" title="Tri date de création" aria-label="Tri date">
+    <option value="">Date création</option>
+    <option value="created-desc">Récente d'abord</option>
+    <option value="created-asc">Ancienne d'abord</option>
+  </select>
+  {% endif %}
+</div>
+{% endmacro %}
+
+{% block content %}
+
+<h1 class="page-title">🗂 {{ page_heading }}</h1>
+
+{% if stats is defined %}
+<div class="dashboard-stats">
+  <div class="dashboard-stat">
+    <span class="dashboard-stat-num">{{ stats.categories }}</span>
+    <span class="dashboard-stat-label">Catégorie{{ 's' if stats.categories != 1 else '' }}</span>
+  </div>
+  <div class="dashboard-stat">
+    <span class="dashboard-stat-num">{{ stats.playlists_top }}</span>
+    <span class="dashboard-stat-label">Playlist{{ 's' if stats.playlists_top != 1 else '' }} principale{{ 's' if stats.playlists_top != 1 else '' }}</span>
+  </div>
+  <div class="dashboard-stat">
+    <span class="dashboard-stat-num">{{ stats.playlists_sub }}</span>
+    <span class="dashboard-stat-label">Sous-playlist{{ 's' if stats.playlists_sub != 1 else '' }}</span>
+  </div>
+  <div class="dashboard-stat">
+    <span class="dashboard-stat-num">{{ stats.playlist_videos }}</span>
+    <span class="dashboard-stat-label">Vidéo{{ 's' if stats.playlist_videos != 1 else '' }} en playlist</span>
+  </div>
+</div>
+<nav class="dashboard-shortcuts" aria-label="Raccourcis">
+  <a class="dashboard-shortcut" href="{{ url_for('index', sort='recent') }}">🕒 Dernières ajoutées</a>
+  <a class="dashboard-shortcut" href="{{ url_for('index', favorite_only='1') }}">★ Favoris</a>
+  <a class="dashboard-shortcut" href="{{ url_for('index', has_comment='1') }}">💬 Avec commentaire</a>
+  <a class="dashboard-shortcut" href="{{ url_for('index', sort='views') }}">👁 Les plus vues</a>
+  <a class="dashboard-shortcut" href="{{ url_for('settings_view') }}">⚙ Paramètres / scan</a>
+</nav>
+{% endif %}
+
+<p class="muted">
+  {% if show_categories and show_playlists %}
+    Crée et gère tes catégories et playlists : titre, une photo de couverture, note (1 à 5 étoiles) et commentaire pour chacune.
+  {% elif show_categories %}
+    Toutes tes catégories, en un coup d'œil. Clique sur une catégorie pour voir ses vidéos, filtre ou trie la liste, ou modifie ses infos directement ci-dessous.
+  {% else %}
+    Toutes tes playlists, en un coup d'œil. Clique sur une playlist pour voir ses vidéos, filtre ou trie la liste, ou modifie ses infos directement ci-dessous.
+  {% endif %}
+</p>
+
+<div class="organize-columns {{ '' if (show_categories and show_playlists) else 'organize-columns-single' }}">
+
+  {% if show_categories %}
+  <section class="organize-col">
+    <h2>Catégories</h2>
+    <form action="{{ url_for('category_new') }}" method="post" class="organize-new-form">
+      <input type="text" name="name" placeholder="Nouvelle catégorie" required>
+      <button type="submit">+ Créer</button>
+    </form>
+
+    {% if category_list %}{{ toolbar('org-list-categories', 'les catégories') }}{% endif %}
+
+    <div class="org-cards-list view-grid" id="org-list-categories">
+      {% for c in category_list %}
+        {{ entity_card(c, 'category', 'category_full_edit', 'category_image', 'category_view') }}
+      {% else %}
+        <p class="muted">Aucune catégorie pour le moment.</p>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  {% if show_playlists %}
+  <section class="organize-col">
+    <h2>Playlists</h2>
+    <form action="{{ url_for('playlist_new') }}" method="post" class="organize-new-form">
+      <input type="text" name="name" placeholder="Nouvelle playlist" required>
+      <select name="parent_id" class="organize-new-parent-select" title="Playlist parente (optionnel)">
+        <option value="">Playlist principale</option>
+        {% for po in flat_playlists if po.depth == 0 %}
+        <option value="{{ po.id }}">{{ po.name }}</option>
+        {% endfor %}
+      </select>
+      <input type="date" name="manual_creation_date" class="js-manual-date-input" title="Date de création (obligatoire pour une sous-playlist)" hidden>
+      <button type="submit">+ Créer</button>
+    </form>
+    <p class="muted org-hint">Choisis une playlist parente pour créer directement une sous-playlist (la date de création devient alors obligatoire). 2 niveaux maximum : une sous-playlist ne peut pas elle-même avoir de sous-playlist.</p>
+
+    {% if playlist_list %}{{ toolbar('org-list-playlists', 'les playlists') }}{% endif %}
+
+    <div class="org-cards-list view-grid" id="org-list-playlists">
+      {% for p in playlist_list %}
+        {{ entity_card(p, 'playlist', 'playlist_full_edit', 'playlist_image', 'playlist_view', parent_options=flat_playlists) }}
+      {% else %}
+        <p class="muted">Aucune playlist pour le moment.</p>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+</div>
+
+{% endblock %}

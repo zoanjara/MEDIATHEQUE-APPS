@@ -1,0 +1,4620 @@
+/* ============ Thème clair (bleu marine + blanc) — par défaut ============ */
+:root {
+  --bg: #f4f7fb;
+  --bg-elevated: #0b2447;       /* bleu marine — header/éléments forts */
+  --bg-elevated-2: #123a6b;     /* bleu marine un ton plus clair (hover) */
+  --bg-card: #ffffff;
+  --border: #d9e2ef;
+  --text: #14213d;
+  --text-on-dark: #ffffff;
+  --text-muted: #64748b;
+  --accent: #1d4ed8;
+  --accent-hover: #1e40af;
+  --danger: #dc2626;
+  --shadow: 0 1px 3px rgba(11, 36, 71, 0.08);
+  --flash-bg: #e7f0ff;
+  --rose: #e0559b;
+  --rose-bg: rgba(224, 85, 155, 0.12);
+  --orange: #f2872e;
+  --orange-bg: rgba(242, 135, 46, 0.12);
+}
+/* Palette claire par défaut : l'icône native des champs date/heure doit
+   rester sombre-sur-clair (comportement navigateur par défaut). */
+:root { color-scheme: light; }
+
+/* ============ Thème sombre (basculable) — noir, blanc, rouge ============ */
+[data-theme="dark"] {
+  --bg: #000000;
+  --bg-elevated: #0a0a0a;
+  --bg-elevated-2: #1a1a1a;
+  --bg-card: #121212;
+  --border: #2b2b2b;
+  --text: #ffffff;
+  --text-on-dark: #ffffff;
+  --text-muted: #a3a3a3;
+  --accent: #e50914;
+  --accent-hover: #ff2a3a;
+  --danger: #ff3b3b;
+  --shadow: 0 2px 10px rgba(229, 9, 20, 0.15);
+  --flash-bg: #1a0708;
+  --rose: #f472b6;
+  --rose-bg: rgba(244, 114, 182, 0.15);
+  --orange: #fb923c;
+  --orange-bg: rgba(251, 146, 60, 0.15);
+}
+[data-theme="dark"] { color-scheme: dark; }
+
+/* ============ Thème "Turquoise" (basculable) — gris très foncé, blanc, vert turquoise, noir ============ */
+[data-theme="turquoise"] {
+  --bg: #1b1c1d;
+  --bg-elevated: #000000;
+  --bg-elevated-2: #101112;
+  --bg-card: #232527;
+  --border: #3a3d40;
+  --text: #ffffff;
+  --text-on-dark: #ffffff;
+  --text-muted: #a6adb0;
+  --accent: #14b8a6;
+  --accent-hover: #0d9488;
+  --danger: #ff5c5c;
+  --shadow: 0 2px 10px rgba(20, 184, 166, 0.18);
+  --flash-bg: #10302c;
+  --rose: #2dd4bf;
+  --rose-bg: rgba(45, 212, 191, 0.14);
+  --orange: #5eead4;
+  --orange-bg: rgba(94, 234, 212, 0.14);
+}
+[data-theme="turquoise"] { color-scheme: dark; }
+
+/* Rend l'icône du calendrier natif toujours cliquable/visible, quel que
+   soit le thème (voir color-scheme ci-dessus) — champ date de création de
+   sous-playlist notamment (.js-new-sub-date, dans "✎ Modifier les
+   métadonnées"), mais s'applique à tous les champs date/heure du site. */
+input[type="date"], input[type="time"], input[type="datetime-local"] {
+  color-scheme: inherit;
+}
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.85;
+}
+input[type="date"]::-webkit-calendar-picker-indicator:hover,
+input[type="time"]::-webkit-calendar-picker-indicator:hover,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Segoe UI", Roboto, Arial, sans-serif;
+  transition: background 0.2s, color 0.2s;
+}
+
+a { color: inherit; text-decoration: none; }
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 20px;
+  background: var(--bg-elevated);
+  color: var(--text-on-dark);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.brand { font-size: 1.2rem; font-weight: 600; white-space: nowrap; color: var(--text-on-dark); }
+
+.sidebar-toggle-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-on-dark);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 1.15rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.sidebar-toggle-btn:hover { background: rgba(255,255,255,0.18); }
+body.sidebar-open .sidebar-toggle-btn { background: rgba(255,255,255,0.22); border-color: rgba(255,255,255,0.35); }
+
+.searchbar { flex: 1; display: flex; max-width: 600px; position: relative; }
+.search-input-wrap { position: relative; flex: 1; }
+.searchbar input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  border-radius: 20px 0 0 20px;
+  background: #ffffff;
+  color: #000000;
+}
+.searchbar input::placeholder { color: #6b7280; }
+.searchbar button {
+  padding: 8px 16px;
+  border: 1px solid transparent;
+  border-radius: 0 20px 20px 0;
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+}
+.searchbar button:hover { background: var(--accent-hover); }
+
+.search-suggestions {
+  display: none;
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(11,36,71,0.18);
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: 360px;
+  z-index: 30;
+}
+.search-suggestions.visible { display: block; }
+.suggestion-group-heading {
+  padding: 7px 14px 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+  background: var(--bg-card);
+  position: sticky;
+  top: 0;
+}
+.suggestion-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  color: var(--text);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.suggestion-item:hover, .suggestion-item.active { background: var(--bg); }
+.suggestion-item-icon { flex: none; opacity: 0.85; }
+.suggestion-item-thumb {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+.suggestion-item-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.topbar-right { display: flex; align-items: center; gap: 14px; margin-left: auto; }
+.settings-link, .theme-toggle-btn { white-space: nowrap; color: var(--text-on-dark); opacity: 0.9; }
+.theme-toggle-btn {
+  background: rgba(255,255,255,0.12);
+  border: none;
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+.theme-toggle-btn:hover { background: rgba(255,255,255,0.22); }
+
+.layout { display: flex; }
+
+/* ============ Panneau ☰ : horizontal, déroulé sous la barre du haut
+   (au lieu d'un tiroir vertical à gauche). Occupe toujours toute la
+   hauteur visible sous la barre du haut (plein écran), sans hauteur
+   réglable ni poignée de redimensionnement. ============ */
+.sidebar {
+  width: 100%;
+  height: calc(100vh - 54px);
+  max-height: calc(100vh - 54px);
+  padding: 18px 26px 22px;
+  border-right: none;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-card);
+  position: fixed;
+  top: 54px;
+  left: 0;
+  overflow-y: auto;
+  z-index: 30;
+  transform: translateY(-110%);
+  transition: transform 0.22s ease-out;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.28);
+  font-size: 0.9rem;
+}
+body.sidebar-open .sidebar { transform: translateY(0); }
+
+/* Scrollbar fine, façon YouTube : invisible au repos, elle n'apparaît
+   (fine) que lorsque la souris survole le panneau. Le défilement à la
+   molette reste toujours possible, seule la barre visuelle change. */
+.sidebar {
+  scrollbar-width: none;       /* Firefox : masquée par défaut */
+  -ms-overflow-style: none;    /* vieux Edge/IE */
+}
+.sidebar::-webkit-scrollbar {
+  width: 0px;                  /* Chrome/Safari/Edge : masquée par défaut */
+}
+.sidebar:hover {
+  scrollbar-width: thin;       /* Firefox : fine au survol */
+}
+.sidebar:hover::-webkit-scrollbar {
+  width: 6px;                  /* Chrome/Safari/Edge : fine au survol */
+}
+.sidebar::-webkit-scrollbar-track { background: transparent; }
+.sidebar::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 10px;
+}
+.sidebar::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* Fond semi-transparent affiché derrière le panneau quand il est ouvert :
+   cliquer dessus referme le panneau (comme un clic "en dehors"). */
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 54px 0 0 0;
+  background: rgba(0,0,0,0.35);
+  z-index: 29;
+}
+body.sidebar-open .sidebar-backdrop { display: block; }
+.sidebar h3 { font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted); margin: 20px 0 8px; letter-spacing: 0.03em; }
+.sidebar h3:first-child { margin-top: 0; }
+
+.side-list {
+  list-style: none; margin: 0; padding: 4px 2px 10px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  overflow: visible;
+}
+/* Vignette au-dessus, titre en dessous (au lieu d'une ligne titre+vignette
+   côte à côte) : chaque catégorie/playlist devient une petite "carte"
+   verticale, centrée, pour mieux mettre en valeur la photo de couverture
+   tout en gardant le titre entièrement lisible en dessous. Cases 4x plus
+   petites (surface divisée par ~4 : deux fois moins large, deux fois
+   moins haute) qu'à l'origine, pour en aligner beaucoup plus côte à côte
+   dans le panneau ☰ — ne concerne QUE ce panneau (catégories/playlists),
+   jamais la gestion des tags (fenêtre "🏷 Tags", classes .org-card /
+   .tags-modal-list, totalement indépendantes). */
+.side-list li a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: center;
+  padding: 6px 4px 5px;
+  border-radius: 7px;
+  color: var(--text);
+  font-size: 1rem;
+  height: 100%;
+}
+.side-list li a:hover { background: var(--bg); }
+.side-list li a.active { background: var(--accent); color: #fff; }
+.side-list .count {
+  color: var(--text-muted);
+  font-size: 0.62rem;
+  flex-shrink: 0;
+}
+.side-list li a.active .count { color: rgba(255,255,255,0.8); }
+.side-list .side-item { width: 100%; min-width: 0; }
+.side-list .side-item-name, .side-list .side-item-label { font-size: 0.68rem; }
+.side-list .side-item-avatar-fallback { font-size: 1rem; }
+.side-list .side-item { margin-bottom: 4px; }
+.side-list .side-item-actions { top: 3px; right: 3px; padding: 1px; gap: 1px; }
+.side-list .side-item-actions .icon-btn-mini { width: 14px; height: 14px; font-size: 0.55rem; }
+
+@media (max-width: 900px) {
+  .side-list { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 640px) {
+  .side-list { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 420px) {
+  .side-list { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ---- Rangée du haut du panneau : lien "Toutes les vidéos", raccourci
+   vers la page Organiser, et bouton Tags, côte à côte. ---- */
+.sidebar-top-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+.sidebar-top-row .all-videos-link,
+.sidebar-top-row .organize-link {
+  margin: 0;
+}
+
+/* ---- Onglets Catégories / Playlists : une seule des deux sections est
+   affichée à la fois (jamais côte à côte), afin que la section active
+   profite de toute la largeur du panneau et que ses cases soient bien
+   plus grandes et visibles. ---- */
+.sidebar-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.sidebar-tab-btn {
+  flex: 1 1 auto;
+  padding: 9px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-muted);
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+}
+.sidebar-tab-btn:hover { color: var(--text); }
+.sidebar-tab-btn.tab-categories.active { background: var(--rose); border-color: var(--rose); color: #fff; }
+.sidebar-tab-btn.tab-playlists.active { background: var(--orange); border-color: var(--orange); color: #fff; }
+
+.sidebar-sections {
+  display: block;
+}
+.side-section {
+  display: none;
+  width: 100%;
+  min-width: 0;
+}
+.sidebar-sections[data-active-panel="category"] .side-section-categories { display: block; }
+.sidebar-sections[data-active-panel="playlist"] .side-section-playlists { display: block; }
+
+.all-videos-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 9px 14px;
+  border-radius: 8px;
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 1.02rem;
+}
+.all-videos-link:hover { background: var(--bg); }
+.all-videos-link.active { background: var(--accent); color: #fff; }
+
+/* ---- Catégories (rose) / Playlists (orange) : distinction visuelle ---- */
+.section-categories { color: var(--rose) !important; }
+.section-playlists { color: var(--orange) !important; }
+.side-section-link {
+  display: block;
+  font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.03em;
+  margin: 0 0 8px; font-weight: 700; cursor: pointer;
+}
+.side-section-link:hover { text-decoration: underline; }
+.count-rose {
+  color: var(--rose);
+  font-weight: 700;
+  background: var(--rose-bg);
+  padding: 1px 7px;
+  border-radius: 10px;
+}
+.count-orange {
+  color: var(--orange);
+  font-weight: 700;
+  background: var(--orange-bg);
+  padding: 1px 7px;
+  border-radius: 10px;
+}
+.list-categories li a.active { background: var(--rose); }
+.list-categories li a.active .count-rose { background: rgba(255,255,255,0.25); color: #fff; }
+.list-playlists li a.active { background: var(--orange); }
+.list-playlists li a.active .count-orange { background: rgba(255,255,255,0.25); color: #fff; }
+.side-section-categories .side-item:hover { background: var(--rose-bg); }
+.side-section-playlists .side-item:hover { background: var(--orange-bg); }
+
+/* Chaque female/playlist reçoit sa propre couleur (--item-color, posée en
+   inline-style par item) pour bien les distinguer les unes des autres dans
+   le panneau. */
+.list-playlists .side-item { --item-color: var(--orange); }
+.list-playlists li a { color: var(--item-color); font-weight: 600; }
+.list-playlists li a .count-orange { color: var(--item-color); background: color-mix(in srgb, var(--item-color) 18%, transparent); }
+.list-playlists li a.active { background: var(--item-color); color: #fff; }
+.list-playlists li a.active span { color: #fff; }
+.list-playlists li a.active .count-orange { background: rgba(255,255,255,0.25); color: #fff; }
+.list-playlists .side-item:hover { background: color-mix(in srgb, var(--item-color) 14%, transparent); }
+
+.side-item-empty { padding: 6px 10px; font-size: 0.9rem; }
+
+.side-item {
+  position: relative;
+  border-radius: 10px;
+  margin-bottom: 8px;
+}
+.side-item a { min-width: 0; gap: 8px; }
+/* Le titre ne doit plus jamais être coupé (ni tronqué avec "...", ni
+   caché) : on autorise le retour à la ligne pour les noms longs, la carte
+   s'agrandit simplement en hauteur si besoin. */
+.side-item-name, .side-item-label {
+  width: 100%; min-width: 0;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  line-height: 1.25;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+/* Vignette de couverture rectangulaire (même gabarit qu'une case vidéo :
+   ratio 16/9, angles non arrondis) au-dessus de chaque catégorie /
+   playlist du panneau vertical. Avec image : la photo de couverture
+   entière reste visible (object-fit: contain), sans recadrage qui en
+   masquerait les bords — elle garde sa flexibilité naturelle. Sans
+   image : un rectangle de repli dans la couleur de l'élément (rose pour
+   les catégories, couleur propre à chaque playlist), avec une icône,
+   pour ne jamais laisser un vide disgracieux dans la liste. */
+.side-item-avatar {
+  flex-shrink: 0;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--item-color, var(--accent)) 20%, transparent);
+  box-shadow: var(--shadow);
+}
+.side-item-avatar img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.side-item-avatar-fallback { font-size: 1.7rem; line-height: 1; }
+.side-section-categories .side-item-avatar { background: var(--rose-bg); }
+/* Boutons ✎/✕ : superposés en haut à droite de la carte (visibles au
+   survol), pour ne pas perturber la mise en page verticale
+   vignette/titre. */
+.side-item-actions {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 0.15s;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 2px;
+  box-shadow: var(--shadow);
+}
+.side-item:hover .side-item-actions, .side-item:focus-within .side-item-actions { opacity: 1; }
+
+.organize-link {
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
+  padding: 9px 14px;
+  border-radius: 8px;
+  border: 1px dashed var(--border);
+  font-size: 0.86rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+.organize-link:hover { border-color: var(--accent); color: var(--accent); }
+
+.icon-btn {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  font-size: 0.78rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.icon-btn:hover { background: var(--border); color: var(--text); }
+.icon-btn-danger:hover { background: var(--danger); color: #fff; }
+.icon-btn-mini { width: 18px; height: 18px; font-size: 0.68rem; }
+
+/* Style autonome (ex. tags sur la page vidéo, hors sidebar) */
+.video-tags .tag-pill {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: 3px 10px;
+  border-radius: 14px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+.video-tags .tag-pill:hover { color: #fff; background: var(--accent); border-color: var(--accent); }
+/* Tag "image" : petite vignette ronde devant le nom, jamais déformée
+   (object-fit: cover sur un cercle fixe, pas de recadrage disgracieux vu
+   la petite taille). */
+.tag-pill-img {
+  width: 18px; height: 18px; min-width: 18px;
+  border-radius: 50%; object-fit: cover; object-position: center;
+  margin-right: 2px; vertical-align: middle;
+}
+.tag-pill-with-image { display: inline-flex; align-items: center; gap: 5px; padding-left: 4px; }
+
+.tag-cloud { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag-pill-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1px 3px 1px 10px;
+}
+.tag-pill-wrap:hover { border-color: var(--accent); }
+.tag-pill {
+  background: none;
+  border: none;
+  padding: 2px 4px 2px 0;
+  border-radius: 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+.tag-pill-wrap:hover .tag-pill { color: var(--accent); }
+
+.inline-form { display: flex; gap: 6px; margin-top: 6px; }
+.inline-form input {
+  flex: 1;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+}
+.inline-form button {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+}
+.inline-form button:hover { background: var(--accent-hover); }
+
+.button-link {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--accent);
+  color: #fff;
+  text-decoration: none;
+  cursor: pointer;
+}
+.button-link:hover { background: var(--accent-hover); }
+
+
+.content { flex: 1; padding: 20px 28px; max-width: 100%; }
+
+/* Page vidéo uniquement : bandeau du haut et padding du contenu légèrement
+   réduits pour remonter l'écran du lecteur et éviter qu'il ne se retrouve
+   masqué par la barre des tâches Windows en bas d'écran. Aucun élément du
+   bandeau (recherche, panneau latéral, réglages...) n'est retiré, ni sa
+   fonctionnalité modifiée : seuls les espacements sont resserrés. */
+body.video-page .topbar { padding: 6px 20px; }
+body.video-page .content { padding-top: 2px; }
+
+/* Section tri/filtre/recherche (barre "toolbar" des vues catégorie/tag/
+   playlist principale) : espacements resserrés (marges, paddings, gaps)
+   pour occuper moins de hauteur à l'écran et laisser voir plus de cases
+   vidéo sans avoir à scroller — aucun champ, bouton ni fonctionnalité
+   retiré, seule l'épaisseur de la bande change. */
+.toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; flex-wrap: wrap; gap: 4px; }
+.result-count { color: var(--text-muted); }
+.sort-form { display: flex; gap: 5px; flex-wrap: wrap; align-items: flex-end; }
+.sort-form label { font-size: 0.7rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 1px; }
+.quickbar-details {
+  flex-basis: 100%;
+}
+.quickbar-details > summary {
+  cursor: pointer; font-size: 0.7rem; color: var(--text-muted);
+  list-style: none; user-select: none; padding: 0; line-height: 1.25;
+}
+.quickbar-details > summary::-webkit-details-marker { display: none; }
+.quickbar-details > summary::before { content: "▸ "; }
+.quickbar-details[open] > summary::before { content: "▾ "; }
+.video-date-quickbar {
+  display: flex; gap: 4px; flex-wrap: wrap; align-items: flex-end;
+  margin-top: 2px;
+}
+.video-date-quickbar-field {
+  font-size: 0.67rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 1px;
+}
+.video-date-quickbar-field .org-date-range input[type="date"] { font-size: 0.7rem; padding: 2px 4px; }
+.video-date-quickbar-field select {
+  padding: 2px 5px; border-radius: 7px; border: 1px solid var(--border);
+  background: var(--bg-card); color: var(--text); font-size: 0.7rem;
+}
+.sort-form select, .sort-form input {
+  background: var(--bg-card);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 2px 5px;
+  font-size: 0.76rem;
+}
+
+.select-mode-toggle {
+  padding: 3px 7px; border: 1px solid var(--border); background: var(--bg-card);
+  color: var(--text); border-radius: 6px; cursor: pointer; font-size: 0.74rem;
+}
+.select-mode-toggle.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+.advanced-search { margin-bottom: 2px; }
+.advanced-search summary { cursor: pointer; color: var(--accent); font-size: 0.68rem; padding: 0; line-height: 1.2; }
+.advanced-fields {
+  display: flex; gap: 4px; flex-wrap: wrap; margin-top: 2px;
+  padding: 4px 6px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px;
+}
+.advanced-fields label { display: flex; flex-direction: column; gap: 1px; font-size: 0.67rem; color: var(--text-muted); }
+.advanced-fields input, .advanced-fields select {
+  background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 1px 4px; color: var(--text); font-size: 0.72rem;
+}
+.advanced-fields button { align-self: flex-end; padding: 2px 7px; border-radius: 6px; border: none; background: var(--accent); color: #fff; cursor: pointer; font-size: 0.72rem; }
+.advanced-fields .checkbox-field {
+  flex-direction: row; align-items: center; gap: 4px; align-self: flex-end; margin-bottom: 3px;
+}
+.advanced-fields .checkbox-field input { width: auto; }
+.reset-filters-link {
+  align-self: flex-end; font-size: 0.7rem; color: var(--text-muted); padding: 3px 3px;
+}
+.reset-filters-link:hover { color: var(--danger); }
+.filters-dynamic-hint {
+  flex-basis: 100%; font-size: 0.66rem; color: var(--text-muted); font-style: italic;
+}
+
+/* ============ Barre d'outils unifiée "gestion de contenu" ============
+   Utilisée uniquement sur les vues "Toutes les vidéos" (accueil) et
+   "Sous-playlist" (voir unified_toolbar dans _video_grid.html). Regroupe
+   dans un seul bloc au design plat : compteur, mode sélection, tri,
+   pagination précédent/suivant (visible sans avoir à scroller), et un
+   volet unique pour les filtres avancés + le filtre/tri rapide par date.
+   Les autres vues (catégorie, tag, playlist principale) ne sont pas
+   concernées et gardent leur ancien affichage (.toolbar) inchangé. */
+.content-toolbar {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 4px 8px;
+  margin-bottom: 5px;
+  box-shadow: var(--shadow);
+}
+.content-toolbar-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.content-toolbar-top .result-count {
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.86rem;
+}
+.content-toolbar-actions {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.content-toolbar-actions .sort-form { margin: 0; }
+.content-toolbar-actions .sort-form label { color: var(--text-muted); }
+
+.content-toolbar-pager {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.toolbar-pager-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: var(--accent);
+  background: transparent;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.toolbar-pager-btn:hover { background: var(--accent); color: #fff; }
+.toolbar-pager-btn.is-disabled {
+  color: var(--text-muted);
+  opacity: 0.45;
+  cursor: default;
+  pointer-events: none;
+}
+.toolbar-pager-info {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  padding: 0 2px;
+  white-space: nowrap;
+}
+.toolbar-pager-num {
+  min-width: 1.6em;
+  justify-content: center;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+.toolbar-pager-btn.is-current {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  min-width: 1.6em;
+  justify-content: center;
+  pointer-events: none;
+}
+.toolbar-pager-ellipsis {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  padding: 0 2px;
+  user-select: none;
+}
+
+.content-toolbar-filters {
+  margin-top: 2px;
+  padding-top: 2px;
+  border-top: 1px solid var(--border);
+}
+.content-toolbar-filters > summary {
+  cursor: pointer;
+  color: var(--accent);
+  font-size: 0.68rem;
+  font-weight: 500;
+  list-style: none;
+  user-select: none;
+  padding: 0;
+  line-height: 1.2;
+}
+.content-toolbar-filters > summary::-webkit-details-marker { display: none; }
+.content-toolbar-filters > summary::before { content: "▸ "; }
+.content-toolbar-filters[open] > summary::before { content: "▾ "; }
+.content-toolbar-filters-body {
+  margin-top: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+/* À l'intérieur de la barre unifiée, le formulaire de filtres avancés
+   (rendu en mode "bare" par _filters.html, donc sans son propre cadre)
+   récupère directement le cadre .content-toolbar-filters-body : on retire
+   son propre fond/bordure pour ne pas avoir un encadré dans un encadré. */
+.content-toolbar-filters-body > .advanced-fields {
+  margin-top: 0;
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+.content-toolbar-filters-body .video-date-quickbar {
+  margin-top: 0;
+  padding-top: 3px;
+  border-top: 1px dashed var(--border);
+}
+
+@media (max-width: 720px) {
+  .content-toolbar-top { flex-direction: column; align-items: stretch; }
+  .content-toolbar-actions { flex-direction: column; align-items: stretch; }
+  .content-toolbar-pager { justify-content: center; }
+}
+
+.flash {
+  background: var(--flash-bg);
+  border: 1px solid var(--accent);
+  color: var(--text);
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.empty-state {
+  color: var(--text-muted);
+  padding: 48px 20px;
+  text-align: center;
+  max-width: 420px;
+  margin: 24px auto;
+  background: var(--bg-card);
+  border: 1px dashed var(--border);
+  border-radius: 14px;
+}
+.empty-state p { margin: 0 0 10px; line-height: 1.45; }
+.empty-state p:last-child { margin-bottom: 0; }
+.empty-state a { color: var(--accent); font-weight: 600; }
+.empty-state-icon {
+  font-size: 2.4rem;
+  line-height: 1;
+  margin-bottom: 12px;
+  opacity: 0.7;
+}
+
+/* ---- Vidéo à la une ---- */
+.featured-banner {
+  display: flex; gap: 18px; background: var(--bg-elevated); color: #fff;
+  border-radius: 14px; padding: 18px; margin-bottom: 22px; overflow: hidden;
+}
+.featured-banner img { width: 260px; min-width: 260px; height: auto; min-height: 0; aspect-ratio: 16/9; object-fit: cover; object-position: center; border-radius: 10px; flex-shrink: 0; }
+.featured-banner .fb-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.75; margin-bottom: 6px; }
+.featured-banner .fb-title { font-size: 1.4rem; font-weight: 600; margin-bottom: 8px; }
+.featured-banner .fb-meta { opacity: 0.8; font-size: 0.88rem; margin-bottom: 12px; }
+.featured-banner a.fb-btn {
+  display: inline-block; background: #fff; color: var(--bg-elevated); padding: 8px 18px;
+  border-radius: 20px; font-weight: 600; font-size: 0.9rem;
+}
+
+.section-title {
+  font-size: 1rem;
+  margin: 22px 0 12px;
+  color: var(--text);
+  padding: 6px 0 6px 12px;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 8%, transparent), transparent 70%);
+  border-radius: 0 8px 8px 0;
+}
+
+/* ---- Résultats de recherche groupés par type (catégories / playlists /
+   sous-playlists / vidéos) au-dessus de la grille de vidéos, quand une
+   recherche texte libre est active ---- */
+.search-matches { margin: 4px 0 6px; }
+.search-match-group { margin-bottom: 18px; }
+.search-match-heading {
+  font-size: 0.78rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.03em; color: var(--text-muted); margin: 0 0 10px;
+}
+.search-match-heading-videos { margin-top: 18px; }
+
+/* Cases avec photo de couverture (grille responsive, 2× plus grande que la
+   version précédente en pastille). Même technique "letterbox" que
+   .org-cover-frame (fond flouté + photo en object-fit: contain) : la photo
+   reste TOUJOURS entièrement visible, sans jamais être rognée ni déborder
+   de la case, quel que soit son format d'origine. */
+.search-match-grid {
+  display: grid;
+  /* Cases 4× plus grandes qu'auparavant (160px -> 640px). Le "min(640px, 100%)"
+     garde la grille flexible : sur un écran plus étroit que 640px, la case se
+     réduit pour tenir dans la largeur disponible au lieu de déborder. */
+  grid-template-columns: repeat(auto-fill, minmax(min(640px, 100%), 1fr));
+  gap: 14px;
+}
+.search-match-card {
+  display: block; color: inherit;
+  border: 1px solid var(--border); border-radius: 10px;
+  background: var(--bg-card); overflow: hidden;
+}
+.search-match-card:hover { border-color: var(--accent); }
+.search-match-cover {
+  position: relative; width: 100%;
+  aspect-ratio: 16 / 9;
+  background: var(--bg-elevated, #14141a);
+}
+.search-match-cover-bg {
+  position: absolute; top: -10%; left: -10%; width: 120%; height: 120%;
+  object-fit: cover; object-position: center;
+  filter: blur(20px) brightness(0.55) saturate(1.15);
+  transform: scale(1.05);
+}
+.search-match-cover-main {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%; max-width: 100%; max-height: 100%;
+  object-fit: contain; object-position: center;
+}
+.search-match-cover-placeholder {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 3.6rem;
+}
+.search-match-label {
+  display: block; padding: 12px 14px; font-size: 1.05rem;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* ---- En-tête d'une catégorie ou d'une playlist (page dédiée façon YouTube) ---- */
+.collection-header {
+  display: flex; gap: 18px; align-items: center;
+  background: var(--bg-elevated); color: #fff;
+  border-radius: 14px; padding: 14px 16px; margin-bottom: 12px; overflow: hidden;
+}
+.collection-cover {
+  position: relative;
+  flex-shrink: 0;
+  display: inline-flex;
+  border-radius: 12px; overflow: hidden; box-shadow: 0 4px 18px rgba(0,0,0,0.35);
+  background: rgba(255,255,255,0.06);
+}
+
+/* Bouton "lire la playlist/catégorie entière" : cercle rouge et blanc,
+   toujours visible devant la vignette de couverture (contrairement au
+   cercle "play" au survol des cases de la page Organiser, celui-ci est LA
+   case courante, affichée en grand : il doit rester bien visible sans
+   nécessiter de survol pour être découvert). */
+.collection-play-btn {
+  position: absolute; z-index: 3;
+  bottom: 8px; right: 8px;
+  width: 38px; height: 38px;
+  /* Bouton "lire" réduit dans les mêmes proportions que la case de
+     couverture (voir .collection-cover img ci-dessus), pour rester bien
+     équilibré visuellement dans la case désormais 2x plus petite. */
+  border-radius: 50%;
+  background: rgba(220, 38, 38, 0.85);
+  border: 2px solid #fff;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.collection-play-btn:hover { transform: scale(1.08); background: rgba(220, 38, 38, 1); }
+.collection-play-icon {
+  width: 0; height: 0;
+  margin-left: 3px; /* recentre optiquement le triangle dans le cercle */
+  border-style: solid;
+  border-width: 8px 0 8px 13px;
+  border-color: transparent transparent transparent #fff;
+}
+.collection-cover img {
+  display: block;
+  width: auto; height: auto;
+  max-width: 250px; max-height: 153px;
+  /* Taille réelle de l'image importée (pas de recadrage) : elle s'affiche à
+     sa taille naturelle, seulement réduite si elle dépasse le plafond
+     250x153 (moitié de l'ancien 500x305), sans jamais être agrandie ni
+     rognée — même logique qu'avant, juste une case 2x plus petite. Ne
+     concerne QUE la case de couverture catégorie/playlist/sous-playlist
+     (.collection-cover, en haut des pages catégorie/playlist) ; la vue
+     grille des vidéos (.card, object-fit: cover) n'est pas concernée. */
+}
+.collection-cover-placeholder {
+  width: 250px; height: 153px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.9rem; opacity: 0.6;
+}
+/* Couverture d'un tag (page dédiée) : contrairement aux catégories/
+   playlists (photo à taille naturelle), l'image d'un tag peut avoir
+   n'importe quel format — on applique donc ici la même méthode "letterbox"
+   que .org-cover-frame (fond flouté + image jamais rognée, object-fit:
+   contain) dans un cadre fixe 500×305, pour un agrandissement flexible et
+   sans effet de bordure disgracieux quel que soit le format d'origine. */
+.collection-cover-tag {
+  width: 500px; height: 305px; max-width: 100%;
+}
+.collection-cover-tag .tag-cover-bg {
+  position: absolute; top: -10%; left: -10%; width: 120%; height: 120%;
+  object-fit: cover; object-position: center;
+  filter: blur(24px) brightness(0.5) saturate(1.15);
+  transform: scale(1.05);
+  z-index: 0;
+}
+.collection-cover-tag .tag-cover-main {
+  position: relative; z-index: 1;
+  display: block; width: 100%; height: 100%;
+  max-width: 100%; max-height: 100%;
+  object-fit: contain; object-position: center;
+}
+.collection-info { min-width: 0; flex: 1; }
+.collection-kicker {
+  font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.75;
+  margin-bottom: 2px;
+}
+.collection-title { margin: 0 0 4px; font-size: 1.55rem; font-weight: 700; line-height: 1.25; }
+.collection-stars { color: var(--accent); letter-spacing: 2px; font-size: 1.05rem; }
+.collection-stars .muted { color: rgba(255,255,255,0.6); font-size: 0.85rem; letter-spacing: normal; }
+.collection-comment {
+  opacity: 0.9; font-size: 0.92rem; margin: 6px 0 0; max-width: 640px;
+}
+.collection-meta { opacity: 0.8; font-size: 0.88rem; margin-top: 6px; }
+.collection-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.collection-actions .icon-btn {
+  width: auto; height: auto; padding: 5px 11px; border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.35); color: #fff; font-size: 0.8rem;
+  background: rgba(255,255,255,0.08);
+}
+.collection-actions .icon-btn:hover { background: rgba(255,255,255,0.18); border-color: #fff; }
+.collection-actions .icon-btn-danger:hover { background: var(--danger); border-color: var(--danger); }
+
+/* ---- Panneau d'édition intégré (titre / image / note), directement sur la
+   page catégorie ou playlist — remplace l'ancien renvoi vers "Organiser" ---- */
+.collection-edit-panel { margin-top: 8px; }
+.collection-edit-panel summary {
+  cursor: pointer; list-style: none;
+  display: inline-flex; align-items: center; gap: 7px;
+  width: auto; height: auto;
+  padding: 7px 14px; border-radius: 20px;
+  border: 2px solid #fff; color: #0f1720; font-size: 0.88rem; font-weight: 700;
+  background: #ffffff;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+}
+.collection-edit-panel summary::-webkit-details-marker { display: none; }
+.collection-edit-panel summary:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+.collection-edit-panel[open] summary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.collection-edit-panel .org-edit-form {
+  background: var(--bg-card); color: var(--text);
+  border-radius: 14px; padding: 18px 20px; margin-top: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  max-width: 640px;
+}
+.collection-edit-panel .org-edit-form label { color: var(--text-muted); }
+
+@media (max-width: 720px) {
+  .collection-header { flex-direction: column; align-items: stretch; }
+  .collection-cover { max-width: 100%; }
+  .collection-cover img { max-width: 100%; height: auto; }
+  .collection-cover-placeholder { width: 100%; height: auto; aspect-ratio: 250/153; }
+  .collection-cover-tag { width: 100%; height: auto; aspect-ratio: 500/305; }
+}
+
+/* ---- Grille ----
+   Cases un peu plus grandes (270px desktop / 250px très grand écran) tout
+   en restant plus denses que l'ancien 260px fixe — polices et titres
+   inchangés, bords droits (pas d'arrondi).
+   "auto-fit" (et non "auto-fill") : sur la DERNIÈRE ligne, quand il reste
+   moins de cases que de colonnes (ex. 4 vidéos pour une ligne qui en
+   contient 7), les colonnes vides sont supprimées au lieu de rester des
+   espaces blancs, et les cases réellement présentes (grâce à leur largeur
+   en "1fr") s'étirent pour occuper tout l'espace ainsi libéré. Résultat
+   strictement identique sur toutes les lignes complètes (le calcul du
+   nombre de colonnes ne change pas) ; seule la dernière ligne incomplète
+   change de rendu. */
+/* auto-fill (et non auto-fit) : avec auto-fit, une grille contenant moins
+   de cases que de colonnes possibles (ex. 1 seule vidéo) étire cette case
+   unique sur toute la largeur du conteneur — combiné à l'aspect-ratio 16/9
+   de .thumb-wrap, ça donnait une vignette énorme occupant tout l'écran.
+   auto-fill garde des colonnes "fantômes" de la même largeur minimale, ce
+   qui empêche les cases existantes de s'étirer au-delà de leur taille
+   normale, sans rien changer au rendu quand la grille est déjà pleine. */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  gap: 12px;
+}
+@media (min-width: 1600px) {
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 10px;
+  }
+}
+@media (max-width: 640px) {
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 10px;
+  }
+}
+
+.card { display: block; position: relative; }
+/* min-width: 0 est nécessaire pour qu'une case de grille CSS ne s'étire
+   jamais au-delà de sa colonne à cause d'un titre trop long : par défaut,
+   un élément de grille a une largeur minimale égale à celle de son contenu
+   (ex. un titre de vidéo sans espaces, ou juste long), ce qui le faisait
+   déborder visuellement par-dessus les cases voisines au lieu de rester
+   contenu dans sa propre colonne (voir aussi .card-title ci-dessous, qui
+   force le retour à la ligne et la troncature de ce même titre). */
+.card-wrap { position: relative; min-width: 0; overflow: hidden; }
+.card-wrap .card { pointer-events: none; min-width: 0; max-width: 100%; }
+.card-wrap a.card { pointer-events: auto; }
+
+.select-checkbox {
+  position: absolute; top: 8px; left: 8px; z-index: 5;
+  width: 20px; height: 20px; cursor: pointer; display: none;
+}
+.select-mode .select-checkbox { display: block; }
+
+.thumb-wrap {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  border-radius: 0;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.thumb-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.thumb-placeholder {
+  width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+  font-size: 2rem; color: var(--text-muted); background: var(--bg-card);
+}
+.badge-duration {
+  position: absolute; bottom: 6px; right: 6px;
+  background: rgba(0,0,0,0.8); color: #fff;
+  font-size: 0.75rem; padding: 1px 6px; border-radius: 4px;
+}
+
+/* Icône "lecture" au survol d'une vignette vidéo (grilles accueil / catégorie
+   / playlist, recommandations, "À découvrir aussi") : même cercle rouge
+   transparent que sur les cases catégorie/playlist, purement visuel ici
+   puisque toute la carte est déjà un lien vers la vidéo. */
+.video-play-overlay {
+  position: absolute; inset: 0;
+  z-index: 2;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  pointer-events: none;
+}
+.card:hover .video-play-overlay,
+.card:focus-visible .video-play-overlay,
+.related-card:hover .video-play-overlay,
+.related-card:focus-visible .video-play-overlay {
+  opacity: 1;
+}
+.video-play-icon {
+  width: 46px; height: 46px;
+  border-radius: 50%;
+  background: rgba(220, 38, 38, 0.32);
+  border: 2px solid rgba(220, 38, 38, 0.75);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+  display: flex; align-items: center; justify-content: center;
+}
+.video-play-icon::after {
+  content: "";
+  width: 0; height: 0;
+  margin-left: 3px; /* recentre optiquement le triangle dans le cercle */
+  border-style: solid;
+  border-width: 8px 0 8px 13px;
+  border-color: transparent transparent transparent #fff;
+}
+
+/* Rattachement (catégorie / playlist(s) / sous-playlist(s)) affiché juste
+   sous la case vidéo, dans la grille (accueil / catégorie / playlist / tag).
+   Liens indépendants du lien principal de la case (qui ouvre la vidéo) :
+   cliquer ici ouvre directement la page de la catégorie/playlist concernée. */
+.card-collections {
+  padding: 0 2px 8px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0 6px;
+  overflow-wrap: anywhere;
+}
+.card-collection-link { color: var(--text-muted); }
+.card-collection-link:hover { color: var(--accent); text-decoration: underline; }
+.card-collection-sep { opacity: 0.6; }
+
+.card-body { padding: 8px 2px; min-width: 0; max-width: 100%; overflow: hidden; }
+.card-title {
+  font-size: 0.9rem;
+  /* Le titre d'une vidéo peut être long et sans espaces (nom de fichier
+     brut, mot très long...) : sans ces règles, un tel texte ne trouve
+     aucun point de coupure et déborde de sa case pour s'afficher par-dessus
+     les cases voisines. On limite désormais l'affichage à 2 lignes avec
+     "..." si besoin (line-clamp), et on force la coupure des mots trop
+     longs (overflow-wrap/word-break) pour que le titre reste toujours
+     confiné à l'intérieur de sa propre case, quelle que soit sa longueur. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+  max-height: calc(1.3em * 2);
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  hyphens: auto;
+}
+.card-meta { color: var(--text-muted); font-size: 0.85rem; margin-top: 4px; }
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 30px 0;
+}
+.pagination-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2em;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--accent);
+  text-decoration: none;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.pagination-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+.pagination-btn.is-current {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+  font-weight: 600;
+  pointer-events: none;
+}
+.pagination-btn.is-disabled {
+  color: var(--text-muted);
+  opacity: 0.45;
+  cursor: default;
+  pointer-events: none;
+}
+.pagination-ellipsis {
+  color: var(--text-muted);
+  padding: 0 4px;
+  user-select: none;
+}
+.page-info { color: var(--text-muted); }
+
+.page-title { margin-top: 0; }
+
+/* ---- Barre d'action groupée (édition en masse) ---- */
+.bulk-bar {
+  /* Remontée de 20px à 72px, même raison que .mini-player-host plus bas
+     dans ce fichier : évite qu'elle se retrouve masquée par la barre des
+     tâches Windows en bas de l'écran. */
+  position: fixed; bottom: 72px; left: 50%; transform: translateX(-50%);
+  background: var(--bg-elevated); color: #fff; padding: 12px 18px; border-radius: 14px;
+  display: none; align-items: center; gap: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.3); z-index: 50;
+  flex-wrap: wrap; max-width: 90vw;
+}
+.bulk-bar.visible { display: flex; }
+.bulk-bar input { padding: 6px 10px; border-radius: 6px; border: none; font-size: 0.85rem; }
+.bulk-bar button {
+  padding: 7px 14px; border-radius: 8px; border: none; background: #fff; color: var(--bg-elevated);
+  font-weight: 600; cursor: pointer; font-size: 0.85rem;
+}
+.bulk-bar button.secondary { background: rgba(255,255,255,0.15); color: #fff; }
+.bulk-bar .bulk-count { font-size: 0.85rem; opacity: 0.85; }
+
+/* ---- Page vidéo ---- */
+/* align-items: flex-start (comportement flex normal) : .player-main et
+   .player-related gardent chacun leur propre hauteur naturelle en flux
+   normal ici. Ce sont les règles du bloc "@media (min-width: 1025px)"
+   plus bas (voir "Écran de lecture + infos + bloc métadonnées FIGÉS...")
+   qui transforment les deux en volets indépendants, plafonnés à la
+   hauteur de l'écran et défilant chacun pour leur propre compte — voir
+   ce bloc pour l'historique complet des essais précédents et le
+   raisonnement détaillé. */
+.player-layout { display: flex; gap: 10px; align-items: flex-start; }
+.player-main { flex: 1; min-width: 0; }
+/* Colonne "À découvrir" à 300px : un peu plus d'espace pour l'écran de
+   lecture en largeur, cartes toujours lisibles. */
+.player-related { width: 300px; flex-shrink: 0; }
+
+.video-player {
+  display: block;
+  width: 100%;
+  /* Gabarit 16/9 par défaut avant le cadrage JS (initPlayerFineFit). */
+  aspect-ratio: 16 / 9;
+  max-height: 90vh;
+  border-radius: 0;
+  background: #000;
+  /* contain : image entière, proportions respectées — corrige la
+     déformation / le rognage de cover. Bandes noires possibles si le
+     ratio vidéo diffère de la boîte (comportement correct). */
+  object-fit: contain;
+  object-position: center;
+}
+
+/* Lecteur large : un peu plus de hauteur utile pour l'écran. */
+.player-layout-wide .player-related { width: 300px; }
+.player-layout-wide .video-player {
+  max-height: 97vh;
+  min-height: 560px;
+  border-radius: 0;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.35);
+}
+@media (min-width: 1400px) {
+  .player-layout-wide .video-player { max-height: 98vh; min-height: 620px; }
+}
+
+@media (max-width: 1024px) {
+  .player-layout { flex-direction: column; }
+  .player-related, .player-layout-wide .player-related { width: 100%; }
+}
+
+.no-preview { color: var(--text-muted); margin-bottom: 10px; }
+
+/* ---- Conteneur "écran" du lecteur : rend le lecteur vidéo positionnable,
+   pour pouvoir superposer en bas d'écran la timeline et les boutons
+   (Précédent/Suivant/Aléatoire/Volume), façon YouTube (overlay révélé au
+   survol). Purement additif : ne change ni la taille ni le comportement
+   du <video> lui-même. ---- */
+.video-frame { position: relative; border-radius: 0; overflow: hidden; }
+.video-frame .video-player { display: block; border-radius: 0; }
+.player-layout-wide .video-frame { border-radius: 0; }
+
+/* Feedback visuel pendant un changement de vidéo (navigation douce depuis
+   les cartes "À découvrir aussi", ⏭, etc.) : léger assombrissement +
+   indicateur, retiré dès que le flux a assez de données pour démarrer. */
+.video-frame.is-switching::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+  z-index: 4;
+  transition: opacity 0.15s ease;
+}
+.video-frame.is-switching::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 36px;
+  height: 36px;
+  margin: -18px 0 0 -18px;
+  border: 3px solid rgba(255, 255, 255, 0.25);
+  border-top-color: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  animation: mediatheque-spin 0.7s linear infinite;
+  z-index: 5;
+  pointer-events: none;
+}
+@keyframes mediatheque-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Contrôles NATIFS entièrement masqués : le <video> n'a plus l'attribut
+   "controls" (templates/video.html). Tout est pris en charge par l'overlay
+   personnalisé (timeline fluide, play/pause, prev/next, volume, vitesse,
+   plein écran). Filet de sécurité CSS au cas où un navigateur réaffiche
+   quand même le panneau natif (play + durée qui apparaissaient derrière
+   les boutons de navigation). */
+#main-player::-webkit-media-controls,
+#main-player::-webkit-media-controls-enclosure,
+#main-player::-webkit-media-controls-panel,
+#main-player::-webkit-media-controls-play-button,
+#main-player::-webkit-media-controls-current-time-display,
+#main-player::-webkit-media-controls-time-remaining-display,
+#main-player::-webkit-media-controls-timeline,
+#main-player::-webkit-media-controls-timeline-container,
+#main-player::-webkit-media-controls-mute-button,
+#main-player::-webkit-media-controls-volume-slider,
+#main-player::-webkit-media-controls-volume-slider-container,
+#main-player::-webkit-media-controls-volume-control-container,
+#main-player::-webkit-media-controls-fullscreen-button,
+#main-player::-webkit-media-controls-overlay-play-button {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+/* Firefox */
+#main-player::-moz-media-controls { display: none !important; }
+#main-player { /* évite le chrome natif résiduel */
+  -webkit-media-controls: none;
+}
+
+/* ---- Overlay bas façon YouTube : regroupe la timeline fluide (tout en
+   haut de l'overlay) puis la rangée de boutons (Précédent/Suivant/
+   Aléatoire/Volume/Plein écran) juste en dessous, le tout à l'intérieur
+   de l'écran vidéo. Un padding généreux évite que les chronos ou les
+   boutons ne touchent les bords/coins arrondis du cadre. ---- */
+.player-overlay-bottom {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  z-index: 3;
+  padding: 26px 14px 10px;
+  background: linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.5) 55%, rgba(0,0,0,0) 100%);
+  /* Masqué par défaut : timeline + boutons visibles UNIQUEMENT au survol.
+     Pas de transform (évite de décaler le bouton pendant le clic souris
+     et d'annuler le mouseup → play/pause qui ne répondait plus). */
+  opacity: 0;
+  transition: opacity 0.18s ease;
+  pointer-events: none;
+}
+.video-frame:hover .player-overlay-bottom,
+.video-frame:focus-within .player-overlay-bottom {
+  opacity: 1;
+  pointer-events: auto;
+}
+/* Clic souris sur un bouton ne doit pas laisser l'overlay collé après
+   départ de la souris — seul le focus clavier réel (:focus-visible).
+   Les boutons gardent pointer-events: auto même si l'overlay s'atténue. */
+@supports selector(:has(a)) {
+  .video-frame:focus-within .player-overlay-bottom {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .video-frame:hover .player-overlay-bottom,
+  .video-frame:has(:focus-visible) .player-overlay-bottom {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  /* Les contrôles restent cliquables dès que le cadre a le focus
+     (évite le cas où focus-within masque pointer-events au moment du clic). */
+  .video-frame:focus-within .player-nav-buttons,
+  .video-frame:focus-within .player-playpause-btn,
+  .video-frame:focus-within .smooth-seek-wrap {
+    pointer-events: auto;
+  }
+}
+/* Écrans tactiles (pas de survol) : overlay accessible en permanence. */
+@media (hover: none) {
+  .player-overlay-bottom {
+    opacity: 1;
+    pointer-events: auto;
+    background: linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0) 100%);
+  }
+}
+/* Bouton play/pause : toujours au-dessus, jamais bloqué par un parent. */
+.player-playpause-btn {
+  position: relative;
+  z-index: 5;
+  pointer-events: auto !important;
+  cursor: pointer;
+}
+
+/* ---- Barre de progression fluide additive (glissage sans à-coups) et
+   message de récupération auto en cas de plantage — voir
+   static/js/player-smooth.js. Devient l'UNIQUE timeline du lecteur (la
+   timeline native est masquée ci-dessus) : reprend l'épaisseur fine et les
+   couleurs de la timeline YouTube actuelle (piste fine grise, progression
+   rouge/accent, poignée ronde qui n'apparaît qu'au survol/glissement). Un
+   padding horizontal garde les chronos "0:00 / durée" bien à l'intérieur
+   de l'écran, jamais rognés par les bords/coins arrondis. */
+.smooth-seek-wrap { margin: 0 0 4px; padding: 0 4px; user-select: none; }
+.smooth-seek-bar {
+  position: relative;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  touch-action: none;
+}
+.smooth-seek-bar::before {
+  /* piste de fond, fine comme sur YouTube (~3px, s'épaissit au survol) */
+  content: "";
+  position: absolute;
+  left: 0; right: 0;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.3);
+  transition: height 0.1s ease;
+}
+.smooth-seek-buffered {
+  position: absolute; left: 0; height: 3px; width: 0%;
+  border-radius: 2px;
+  background: rgba(255,255,255,0.35);
+  pointer-events: none;
+  transition: height 0.1s ease;
+}
+.smooth-seek-fill {
+  position: absolute; left: 0; height: 3px; width: 0%;
+  border-radius: 2px;
+  background: var(--accent);
+  pointer-events: none;
+  transition: height 0.1s ease;
+}
+.smooth-seek-handle {
+  position: absolute; left: 0%; top: 50%;
+  width: 13px; height: 13px;
+  transform: translate(-50%, -50%) scale(0);
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px rgba(255,255,255,0.08);
+  pointer-events: none;
+  transition: transform 0.1s ease;
+}
+/* Comme sur YouTube : la piste (et sa poignée) s'épaissit uniquement au
+   survol ou pendant le glissement, discrète le reste du temps. */
+.smooth-seek-bar:hover::before,
+.smooth-seek-bar.dragging::before,
+.smooth-seek-bar:hover .smooth-seek-buffered,
+.smooth-seek-bar.dragging .smooth-seek-buffered,
+.smooth-seek-bar:hover .smooth-seek-fill,
+.smooth-seek-bar.dragging .smooth-seek-fill { height: 5px; }
+.smooth-seek-bar.dragging .smooth-seek-handle,
+.smooth-seek-bar:hover .smooth-seek-handle { transform: translate(-50%, -50%) scale(1); }
+.smooth-seek-bar:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+.smooth-seek-tooltip {
+  display: none;
+  position: absolute;
+  bottom: 18px;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.85);
+  color: #fff;
+  padding: 2px 7px;
+  border-radius: 5px;
+  font-size: 0.75rem;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.smooth-seek-times {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.85);
+  margin-top: 2px;
+}
+
+/* Rangée unique : chronos (gauche) + boutons nav (droite). Les temps
+   ne sont plus empilés juste au-dessus des icônes (où ils pouvaient
+   paraître cachés derrière). */
+.player-controls-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  min-height: 34px;
+}
+.player-controls-row .smooth-seek-times,
+.player-controls-row .player-time-display {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  justify-content: flex-start;
+  margin: 0;
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.55);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+}
+.player-controls-row .smooth-seek-times .smooth-seek-current::after {
+  content: " / ";
+  color: rgba(255,255,255,0.55);
+  font-weight: 500;
+}
+.player-controls-row .smooth-seek-duration {
+  color: rgba(255,255,255,0.75);
+  font-weight: 500;
+}
+.player-controls-row .player-nav-buttons {
+  flex: 1;
+  min-width: 0;
+}
+
+.smooth-player-error-banner {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin: 10px 0 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+.smooth-player-retry-btn {
+  padding: 4px 12px;
+  border-radius: 16px;
+  border: 1px solid var(--accent);
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+.smooth-player-retry-btn:hover { background: var(--accent); color: #fff; }
+
+.speed-controls { display: flex; gap: 4px; align-items: center; margin: 10px 0 0; }
+.player-nav-buttons .speed-controls { margin: 0; margin-left: auto; }
+.speed-controls span { font-size: 0.8rem; color: var(--text-muted); margin-right: 4px; }
+.speed-controls button {
+  padding: 4px 9px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-card);
+  color: var(--text); cursor: pointer; font-size: 0.8rem;
+}
+.speed-controls button.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+.video-actions { display: flex; gap: 10px; align-items: center; margin: 10px 0; flex-wrap: wrap; }
+.video-actions button {
+  padding: 6px 12px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text);
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+.video-actions button:hover { border-color: var(--accent); color: var(--accent); }
+.video-actions button.danger:hover { background: var(--danger); color: #fff; }
+
+/* Bouton "Modifier les métadonnées" (déplacé depuis .edit-block, voir
+   templates/video.html) : rejoint la même rangée que les 3 boutons
+   d'actions ci-dessus ("Ouvrir dans le lecteur par défaut", "Emplacement
+   du fichier", "Supprimer le fichier"), même famille de pilule (rayon,
+   padding, couleurs au survol) pour rester visuellement cohérent avec ses
+   voisins — teinte "accent" légère conservée pour le distinguer comme
+   action un peu à part (bascule vers un panneau, pas une action directe).
+   Structure interne (span principal + span indice) inchangée : l'indice
+   ("Mode lecture…" / "Mode édition") passe juste en petite légende sous
+   le libellé plutôt qu'à côté, pour ne pas élargir la pilule. */
+.video-actions-editbtn {
+  margin: 0;
+  padding: 5px 12px;
+  border-radius: 18px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  line-height: 1.2;
+}
+.video-actions-editbtn .edit-block-title-main { font-weight: 600; font-size: 0.82rem; }
+.video-actions-editbtn .edit-block-hint { font-size: 0.64rem; }
+
+/* Bandeau "sous-playlist en cours de lecture" : placé juste AU-DESSUS du
+   cadre vidéo (en flux normal, PAS en superposition sur l'image), pour
+   rester visible en permanence pendant la lecture sans jamais masquer
+   l'écran ni nécessiter un survol. Anneau animé "entourant la case"
+   (pseudo-élément ::before en pulsation) + point clignotant. */
+.now-playing-topbar {
+  margin-bottom: 10px;
+}
+.now-playing-topbar:empty { display: none; margin-bottom: 0; }
+.now-playing-badge-bar {
+  position: relative;
+  display: inline-flex; align-items: center; gap: 8px;
+  max-width: 100%;
+  background: var(--bg-card);
+  border: 1.5px solid var(--accent);
+  border-radius: 999px;
+  padding: 5px 14px 5px 5px;
+  text-decoration: none; color: inherit;
+  box-shadow: var(--shadow);
+  transition: transform 0.15s ease;
+}
+.now-playing-badge-bar:hover { transform: translateY(-1px); }
+.now-playing-badge-bar::before {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  border-radius: 999px;
+  border: 1.5px solid var(--accent);
+  opacity: 0.7;
+  animation: now-playing-ring 1.6s ease-out infinite;
+  pointer-events: none;
+}
+@keyframes now-playing-ring {
+  0%   { transform: scale(1); opacity: 0.7; }
+  100% { transform: scale(1.1); opacity: 0; }
+}
+.now-playing-badge-cover {
+  flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%; overflow: hidden;
+  background: rgba(128,128,128,0.15);
+  display: flex; align-items: center; justify-content: center;
+}
+.now-playing-badge-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.now-playing-badge-cover-fallback { font-size: 0.9rem; }
+.now-playing-badge-text { min-width: 0; display: flex; flex-direction: column; line-height: 1.2; }
+.now-playing-badge-kicker {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 0.58rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.03em; color: var(--accent); opacity: 0.95;
+}
+.now-playing-badge-name {
+  font-size: 0.8rem; font-weight: 600; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.now-playing-dot {
+  width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+  background: var(--accent);
+  animation: now-playing-dot-blink 1.4s ease-in-out infinite;
+}
+@keyframes now-playing-dot-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
+}
+@media (max-width: 720px) {
+  .now-playing-badge-bar { padding: 4px 10px 4px 4px; gap: 6px; }
+  .now-playing-badge-cover { width: 26px; height: 26px; }
+  .now-playing-badge-name { font-size: 0.72rem; }
+  .now-playing-badge-kicker { font-size: 0.52rem; }
+}
+
+/* Notification "vidéo placée dans la corbeille" : cadre rouge et blanc,
+   en haut de l'écran, disparaît automatiquement après quelques secondes. */
+
+/* ---- Portail codec lourd : empêche lecture/transcodage auto (CPU 100 %) ---- */
+.heavy-codec-gate {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.78);
+  backdrop-filter: blur(4px);
+}
+.heavy-codec-gate-card {
+  max-width: 420px;
+  width: 100%;
+  background: var(--bg-card, #1e1e24);
+  border: 1px solid var(--border, rgba(255,255,255,0.12));
+  border-radius: 14px;
+  padding: 22px 24px;
+  text-align: center;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.45);
+  color: var(--text, #eee);
+}
+.heavy-codec-gate-icon { font-size: 2rem; margin-bottom: 6px; }
+.heavy-codec-gate-card h2 {
+  font-size: 1.15rem;
+  margin: 0 0 10px;
+  font-weight: 650;
+}
+.heavy-codec-gate-card p {
+  font-size: 0.9rem;
+  line-height: 1.45;
+  margin: 0 0 8px;
+  color: var(--text-muted, #aaa);
+}
+.heavy-codec-gate-card p strong { color: var(--text, #eee); }
+.heavy-codec-gate-hint { font-size: 0.85rem !important; margin-bottom: 16px !important; }
+.heavy-codec-gate-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+}
+.heavy-codec-gate-actions button {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.heavy-codec-gate-actions .btn-primary,
+.heavy-codec-gate-actions .heavy-gate-external {
+  background: var(--accent, #e53935);
+  color: #fff;
+  border-color: var(--accent, #e53935);
+}
+.heavy-codec-gate-actions .heavy-gate-compat {
+  background: rgba(255,255,255,0.08);
+  color: var(--text, #eee);
+  border-color: rgba(255,255,255,0.18);
+}
+.heavy-codec-gate-actions .heavy-gate-force {
+  background: transparent;
+  color: var(--text-muted, #aaa);
+  border-color: rgba(255,255,255,0.12);
+  font-weight: 500;
+  font-size: 0.82rem;
+}
+.heavy-codec-gate-actions button:hover { filter: brightness(1.08); }
+.heavy-codec-gate-actions button:disabled { opacity: 0.55; cursor: default; }
+/* Correctif clic précédent/suivant sur l'écran "codec lourd / format peu
+   compatible" : seule la barre de progression (.smooth-seek-wrap, insérée
+   par player-smooth.js) n'a aucun sens tant qu'aucune vidéo ne joue et
+   reste masquée. Les boutons de navigation (⏮ ⏭ lecture/pause volume
+   aléatoire), eux, RESTENT visibles et cliquables : l'ancienne règle
+   masquait tout le bandeau du bas d'un coup (opacity + pointer-events
+   sur .player-overlay-bottom), ce qui rendait ⏮/⏭ invisibles ET
+   silencieusement non-cliquables — clic sans aucun effet. */
+.video-frame.heavy-gated .player-overlay-bottom .smooth-seek-wrap {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.delete-toast {
+  position: fixed;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-16px);
+  z-index: 9999;
+  background: #fff;
+  color: var(--danger);
+  border: 2px solid var(--danger);
+  border-radius: 10px;
+  padding: 12px 22px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  opacity: 0;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  pointer-events: none;
+}
+.delete-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.delete-toast-error { color: #fff; background: var(--danger); border-color: #fff; }
+
+/* Boutons Précédent / Suivant / Aléatoire (navigation dans la playlist
+   d'origine si la vidéo a été ouverte depuis une playlist, sinon par ordre
+   d'ajout récent). Compacts, en icônes façon YouTube actuel, superposés
+   directement sur l'écran vidéo, juste sous la timeline. */
+.player-nav-buttons { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.player-nav-buttons .player-nav-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 1rem;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+  background: rgba(0,0,0,0.4);
+  border: 1px solid rgba(255,255,255,0.25);
+  color: #fff;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.player-nav-buttons a.player-nav-icon:hover, .player-nav-buttons button.player-nav-icon:hover { background: var(--accent); border-color: var(--accent); }
+.player-nav-buttons .player-nav-btn-disabled.player-nav-icon { cursor: default; opacity: 0.4; }
+.player-nav-buttons button.player-nav-icon:disabled { cursor: default; opacity: 0.5; background: rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.25); }
+
+.playback-diagnostics {
+  margin: 6px 0 2px;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+.playback-diagnostics summary { cursor: pointer; width: fit-content; }
+.playback-diagnostics-grid {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 12px;
+  margin-top: 8px;
+  max-width: 560px;
+}
+.playback-diagnostics-grid strong { color: var(--text); font-weight: 600; }
+
+/* Bouton lecture/pause : taille de police (le z-index / pointer-events
+   sont définis plus haut avec .player-overlay-bottom). Clic sur l'écran
+   vidéo OU sur ce bouton OU barre Espace = bascule lecture/pause. */
+.player-playpause-btn { font-size: 0.95rem; }
+
+/* Bouton "lecture aléatoire 🔀" : quand actif, Précédent/Suivant piochent
+   au hasard dans le contexte courant (playlist/sous-playlist, catégorie,
+   ou toutes les vidéos) au lieu de suivre l'ordre habituel. */
+.shuffle-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.player-nav-buttons.shuffle-mode .player-nav-btn-disabled.player-nav-icon {
+  cursor: pointer; opacity: 1; border-color: var(--accent); color: var(--accent);
+}
+
+/* Contrôle de volume personnalisé (voir static/js/player-controls.js) :
+   remplace uniquement l'affichage du volume natif (masqué ci-dessus),
+   même emplacement et même style compact que les icônes voisines. */
+.player-volume { display: flex; align-items: center; gap: 6px; }
+.player-volume-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  font-size: 1rem;
+  cursor: pointer;
+  background: rgba(0,0,0,0.4);
+  border: 1px solid rgba(255,255,255,0.25);
+  color: #fff;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.player-volume-btn:hover { background: var(--accent); border-color: var(--accent); }
+.player-volume-slider {
+  -webkit-appearance: none; appearance: none;
+  width: 70px; height: 4px;
+  border-radius: 2px;
+  background: rgba(255,255,255,0.3);
+  cursor: pointer;
+  outline: none;
+}
+.player-volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  box-shadow: 0 0 0 3px rgba(255,255,255,0.1);
+}
+.player-volume-slider::-moz-range-thumb {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: none;
+  cursor: pointer;
+}
+.player-volume-slider::-moz-range-track { background: rgba(255,255,255,0.3); height: 4px; border-radius: 2px; }
+.player-volume-muted .player-volume-slider { opacity: 0.5; }
+
+.player-nav-overlay .speed-controls { margin-left: auto; }
+.player-nav-overlay .speed-controls button {
+  background: rgba(0,0,0,0.4);
+  border: 1px solid rgba(255,255,255,0.25);
+  color: #fff;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.player-nav-overlay .speed-controls button.active { background: var(--accent); border-color: var(--accent); }
+
+.playlist-add { position: relative; }
+.playlist-add summary {
+  list-style: none;
+  padding: 8px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  cursor: pointer;
+  display: inline-block;
+}
+.playlist-add-list {
+  position: absolute;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px;
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 5;
+  box-shadow: var(--shadow);
+}
+.playlist-add-list button {
+  background: none; border: none; color: var(--text);
+  text-align: left; padding: 6px 10px; cursor: pointer; border-radius: 4px;
+}
+.playlist-add-list button:hover { background: var(--bg); }
+.playlist-add-list button.current { color: var(--accent); font-weight: 600; }
+
+.video-title {
+  font-size: 1.05rem; font-weight: 600; margin: 14px 0 6px;
+  /* Comme .card-title / .related-title (voir plus haut dans ce fichier) :
+     un titre de vidéo long et sans espaces (nom de fichier brut) n'a sinon
+     aucun point de coupure et force l'élément flex .video-title-row (donc
+     toute la page) à s'élargir bien au-delà de l'écran. On force ici la
+     coupure des mots trop longs pour que le titre reste contenu dans sa
+     largeur disponible, quelle que soit sa longueur. */
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.video-meta { color: var(--text-muted); font-size: 0.8rem; }
+.video-description { margin-top: 8px; white-space: pre-wrap; }
+.video-comment { margin-top: 6px; white-space: pre-wrap; color: var(--text-muted); font-size: 0.92rem; }
+.video-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+
+/* ---- Cartes contextuelles (playlist / sous-playlist / catégorie) sous le
+   lecteur, façon YouTube : vignette de couverture + titre. Une vidéo peut
+   être rattachée à PLUSIEURS playlists/sous-playlists à la fois : chacune a
+   sa propre carte (gérées côté serveur, voir compute_membership_cards dans
+   app.py), empilées EN CASCADE (verticalement, comme une liste) plutôt
+   qu'à plat façon mosaïque — pour rester lisible même avec beaucoup
+   d'entrées. Repliable via <details> (voir .video-context-details
+   ci-dessous) : rend cette vue d'ensemble facultative, sans script
+   supplémentaire. Entièrement masqué si la vidéo n'appartient à rien. ---- */
+.video-context-details {
+  margin-top: 10px;
+}
+/* Masque tout le bloc (résumé compris) si la vidéo n'appartient à aucune
+   playlist/sous-playlist/catégorie plutôt que de laisser un simple triangle
+   replié sans rien à révéler dessous. */
+.video-context-details:has(#video-context-cards:empty) { display: none; }
+.video-context-summary {
+  cursor: pointer; user-select: none; list-style: none;
+  display: flex; align-items: center; gap: 6px;
+  font-size: 0.78rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.04em; color: var(--text-muted);
+  padding: 2px 0;
+}
+.video-context-summary::-webkit-details-marker { display: none; }
+.video-context-summary::before {
+  content: "▸"; display: inline-block; font-size: 0.7rem;
+  transition: transform 0.15s ease;
+}
+.video-context-details[open] .video-context-summary::before { transform: rotate(90deg); }
+.video-context-summary:hover { color: var(--text); }
+
+/* Cascade : simple empilement vertical, à plat (plus de plafond de hauteur
+   ni de défilement interne : ce bloc est désormais placé APRÈS
+   #player-fit-group — voir video.html — donc en dehors du calcul de "vue
+   d'ensemble sans scroll" de l'écran, static/js/main.js →
+   initPlayerFineFit. Peu importe le nombre de playlists/sous-playlists
+   rattachées à la vidéo, elles n'affectent donc plus jamais la taille de
+   l'écran : la page défile simplement plus bas pour les atteindre s'il y
+   en a beaucoup, l'écran restant collé en haut pendant ce défilement (même
+   mécanisme "FIGÉS" que pour tout .player-main, voir plus bas). */
+.video-context-cards {
+  display: flex; flex-direction: column; gap: 8px; margin-top: 8px;
+}
+.video-context-cards:empty { display: none; margin-top: 0; }
+.context-card {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--bg-card); border-radius: 12px; padding: 8px;
+  box-shadow: var(--shadow); text-decoration: none; color: inherit;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.context-card:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(0,0,0,0.22); }
+.context-card-cover {
+  flex-shrink: 0; border-radius: 8px; overflow: hidden;
+  background: rgba(128,128,128,0.12);
+  display: flex; align-items: center; justify-content: center;
+}
+/* Image "flexible" comme sur les pages Catégorie/Playlist : jamais coupée
+   ni étirée. Elle est cadrée en entier dans la case (object-fit: contain),
+   quel que soit son format d'origine (portrait, panoramique...). */
+.context-card-cover img {
+  display: block; width: auto; height: auto;
+  max-width: 100%; max-height: 100%; object-fit: contain;
+}
+.context-card-placeholder { font-size: 2.2rem; opacity: 0.6; }
+/* flex: 1 + min-width: 0 : la carte est maintenant empilée en cascade
+   (colonne pleine largeur, voir .video-context-cards) plutôt qu'à plat
+   façon mosaïque — le titre peut donc utiliser toute la largeur restante
+   au lieu d'être tronqué à une largeur fixe pensée pour l'ancien layout. */
+.context-card-info { min-width: 0; flex: 1; }
+.context-card-kicker {
+  font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text-muted); margin-bottom: 2px;
+}
+.context-card-title {
+  font-size: 0.92rem; font-weight: 600;
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* Cartes un peu plus compactes en hauteur (playlist/sous-playlist/catégorie)
+   qu'auparavant (200×112 / 150×92) : réutilise les mêmes proportions déjà
+   validées pour le repli mobile ci-dessous, désormais aussi sur desktop —
+   objectif "aménage espace en bas" pour laisser plus de hauteur à l'écran
+   de lecture, sans rien changer au principe (le calcul JS de l'écran de
+   lecture, static/js/main.js → initPlayerFineFit, mesure ce bloc en direct
+   et profite automatiquement de cette réduction). */
+.context-card-playlist .context-card-cover,
+.context-card-subplaylist .context-card-cover { width: 180px; height: 101px; }
+
+/* Catégorie : case moyenne, souple selon l'image (mêmes proportions que la
+   couverture des pages Catégorie / Playlist, réduites). */
+.context-card-category .context-card-cover { width: 130px; height: 80px; }
+
+/* La cascade est déjà en colonne à toutes les largeurs (voir
+   .video-context-cards ci-dessus), et n'a plus de plafond de hauteur à
+   ajuster (voir plus haut) : seule la largeur du titre tronqué est réduite
+   sur petit écran. */
+@media (max-width: 720px) {
+  .context-card-title { max-width: 60vw; }
+}
+
+/* #edit-block ne contient plus désormais que le panneau d'édition lui-même
+   (le bouton déclencheur "✎ Modifier les métadonnées" a rejoint
+   .video-actions, voir plus haut) : en mode lecture (panneau [hidden]),
+   #edit-block ne doit donc plus réserver de marge/bordure/espace propre —
+   sinon un simple filet vide subsisterait dans la page. Cet espacement ne
+   s'applique donc plus qu'une fois le panneau réellement ouvert. */
+.edit-block.is-editing { margin-top: 22px; border-top: 1px solid var(--border); padding-top: 16px; }
+.edit-block-title {
+  color: var(--text);
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin: 0 0 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+  border-radius: 10px;
+  padding: 8px 12px;
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border));
+  transition: background 0.15s, border-color 0.15s, color 0.15s, opacity 0.15s;
+}
+.edit-block-title:hover {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+}
+.edit-block-title:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.edit-block-title-main { font-weight: 600; }
+.edit-block-hint {
+  font-weight: 400;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+.edit-block-title:hover .edit-block-hint { color: var(--accent); }
+
+/* Mode édition : le bouton d'entrée se masque (le topbar du panneau prend
+   le relais). Sélectionné par id + l'état ".is-editing" porté par
+   .player-layout (déjà posé par le JS existant, static/js/main.js) plutôt
+   que par ".edit-block.is-editing" : le bouton vit maintenant dans
+   .video-actions, plus dans .edit-block, mais reste bien un descendant de
+   .player-layout dans les deux cas. */
+.player-layout.is-editing #edit-block-title {
+  display: none;
+}
+
+/* Panneau d'édition masqué en mode lecture */
+.edit-panel[hidden] {
+  display: none !important;
+}
+.edit-block.is-editing .edit-panel {
+  display: block;
+  animation: edit-panel-in 0.22s ease;
+}
+@keyframes edit-panel-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* En mode édition le sidebar « À découvrir / Vidéo suivante » se rétracte
+   pour laisser toute la largeur au formulaire (option B). */
+.player-layout.is-editing .player-related {
+  display: none;
+}
+.player-layout {
+  transition: gap 0.2s ease;
+}
+
+.edit-section { display: flex; flex-direction: column; gap: 12px; margin-bottom: 4px; }
+.edit-section-title {
+  margin: 0 0 2px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.edit-field-title input {
+  font-size: 1.05rem !important;
+  font-weight: 600;
+}
+.edit-label-plain {
+  display: flex; flex-direction: column; gap: 6px;
+  font-size: 0.82rem; font-weight: 600; color: var(--text-muted);
+}
+
+/* Tant que le formulaire de métadonnées n'a pas été déverrouillé (clic sur
+   le titre "✎ Modifier les métadonnées" ci-dessus), les champs restent
+   inaccessibles : ils sont visuellement estompés et ne réagissent à aucune
+   interaction (souris ou clavier), pour éviter toute modification
+   accidentelle pendant que la vidéo joue. Voir static/js/main.js. */
+.edit-form-locked {
+  opacity: 0.55;
+  filter: saturate(0.6);
+  pointer-events: none;
+  user-select: none;
+}
+.edit-form-locked :focus { outline: none; }
+
+.stars-display { color: var(--accent); letter-spacing: 1px; }
+
+.star-rating-input {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 0;
+  flex-wrap: wrap;
+}
+.star-choice {
+  font-size: 1.55rem;
+  color: var(--border);
+  cursor: pointer;
+  transition: color 0.1s;
+  line-height: 1;
+}
+.star-choice.filled { color: var(--accent); }
+.star-clear {
+  display: inline-block;
+  border: none; background: none; color: var(--text-muted); cursor: pointer;
+  font-size: 0.8rem; margin-left: 8px; padding: 2px 6px; border-radius: 5px;
+}
+.star-clear:hover { background: var(--border); color: var(--text); }
+
+.edit-panel {
+  margin-top: 14px;
+  padding: 0 20px 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+}
+
+/* Barre d'actions du panneau d'édition : reste visible pendant le
+   défilement à l'intérieur de la page vidéo, juste sous le bandeau
+   principal du site (voir .topbar) — top et z-index calés pour ne
+   jamais passer par-dessus lui (voir body.video-page .topbar, dont la
+   hauteur est réduite sur cette page précise). N'affecte que la page
+   vidéo : portée par body.video-page, aucune autre page n'est concernée. */
+.edit-panel-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 0;
+  margin-bottom: 8px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+}
+body.video-page .edit-panel-topbar { top: 47px; }
+.edit-panel-topbar-label {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 0.92rem; font-weight: 600; color: var(--text);
+}
+.edit-dirty-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.25);
+  flex-shrink: 0;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.edit-dirty-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #b45309;
+  opacity: 0;
+  max-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: opacity 0.15s, max-width 0.2s;
+}
+#video-edit-form[data-live-dirty="1"] .edit-dirty-dot {
+  opacity: 1;
+  transform: scale(1);
+}
+#video-edit-form[data-live-dirty="1"] .edit-dirty-label {
+  opacity: 1;
+  max-width: 220px;
+}
+.edit-panel-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.btn-ghost {
+  padding: 9px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.btn-ghost:hover {
+  border-color: var(--text-muted);
+  color: var(--text);
+  background: var(--bg);
+}
+#video-edit-form .js-edit-save:disabled {
+  opacity: 0.55;
+  cursor: default;
+  box-shadow: none;
+  animation: none;
+}
+#video-edit-form[data-live-dirty="1"] .js-edit-save:not(:disabled) {
+  box-shadow: 0 0 0 3px rgba(229, 9, 20, 0.22);
+  animation: edit-save-pulse 1.6s ease-in-out infinite;
+}
+/* Annuler reste toujours accessible en mode édition (sortie du mode même sans dirty).
+   On garde un léger style distinct quand des modifications sont en cours. */
+#video-edit-form .js-edit-cancel { display: inline-flex; }
+.js-edit-cancel[hidden] { display: none !important; }
+#video-edit-form[data-live-dirty="1"] .js-edit-cancel {
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+  color: var(--text);
+}
+#video-edit-form .js-edit-save.is-saved {
+  background: #16a34a;
+  border-color: #16a34a;
+  animation: none;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.2);
+}
+@keyframes edit-save-pulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(229, 9, 20, 0.18); }
+  50% { box-shadow: 0 0 0 5px rgba(229, 9, 20, 0.08); }
+}
+
+/* Sticky save bar on small screens */
+@media (max-width: 720px) {
+  body.video-page .edit-panel-topbar {
+    position: sticky;
+    bottom: auto;
+    top: 0;
+  }
+  .edit-panel-topbar-actions { width: 100%; justify-content: flex-end; }
+  .edit-dirty-label { display: none; }
+}
+
+.edit-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 18px;
+  max-width: 640px;
+}
+.edit-form-grid .field-full { grid-column: 1 / -1; }
+.edit-form-grid label {
+  display: flex; flex-direction: column; gap: 6px;
+  font-size: 0.82rem; font-weight: 600; color: var(--text-muted);
+}
+.field-hint { font-weight: 400; text-transform: none; letter-spacing: 0; }
+.edit-form-grid input, .edit-form-grid textarea, .edit-form-grid select {
+  background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+  color: var(--text); padding: 10px 12px;
+  font-family: inherit; font-size: 0.92rem;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.edit-form-grid input:focus, .edit-form-grid textarea:focus, .edit-form-grid select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(229, 9, 20, 0.15);
+}
+.edit-form-grid textarea { resize: vertical; }
+
+/* Ci-dessous : uniquement la page vidéo dédiée (#video-edit-form). La
+   grille 2 colonnes générique ci-dessus (utilisée par la popup rapide,
+   Catégorie/Playlist/Tag/Organiser) n'est pas touchée : sur la page
+   vidéo, .edit-form-grid ne sert plus qu'au style des champs (bordures,
+   focus) — la mise en page réelle est prise en charge par les classes
+   ci-dessous, imbriquées dans un unique <div class="field-full"> pour
+   neutraliser la grille 2 colonnes générique sans la modifier. */
+#video-edit-form.edit-form-grid { max-width: none; }
+
+/* Disposition en deux colonnes (façon YouTube Studio) : contenu narratif
+   (titre / description / tags / commentaire) à gauche, classement rapide
+   (catégorie / note / date) dans des petites cartes à droite. */
+.edit-form-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+.edit-col-main, .edit-col-side {
+  display: flex; flex-direction: column; gap: 14px; min-width: 0;
+}
+.edit-side-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.edit-side-card:focus-within {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+  box-shadow: 0 0 0 3px rgba(229, 9, 20, 0.08);
+}
+.edit-side-card label { margin: 0; }
+.edit-side-card-grouped {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.edit-side-card-grouped .edit-section-title { margin-bottom: 2px; }
+
+.star-rating-input .star-choice:hover,
+.star-rating-input .star-choice.preview {
+  color: color-mix(in srgb, var(--accent) 70%, #fff);
+  transform: scale(1.12);
+}
+.star-choice {
+  transition: color 0.1s, transform 0.1s;
+  font-size: 1.55rem;
+  padding: 2px 1px;
+}
+.star-value-label {
+  min-width: 2.4em;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  margin-left: 4px;
+}
+
+.category-search-row { margin-bottom: 6px; }
+.category-search-row input[type="search"] {
+  width: 100%;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 8px 10px;
+  font-family: inherit;
+  font-size: 0.85rem;
+}
+.category-search-row input[type="search"]:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(229, 9, 20, 0.12);
+}
+.category-field-modern .category-select-row select {
+  border-radius: 8px;
+  padding: 9px 10px;
+  font-size: 0.9rem;
+}
+
+/* Section Playlists : pleine largeur sous les deux colonnes, pour laisser
+   assez de place aux groupes de sous-playlists une fois déployés. */
+.edit-form-playlists-full { margin-top: 16px; }
+.edit-form-playlists-full > .edit-side-card { padding: 14px 16px; }
+
+/* Repli "Options avancées" (ex. Nombre de lectures, rarement modifié à la
+   main) : simple <details> réutilisant le style des cartes latérales. */
+.edit-advanced-details { cursor: default; }
+.edit-advanced-details > summary {
+  cursor: pointer; font-size: 0.8rem; color: var(--text-muted);
+  font-weight: 600; list-style: none;
+}
+.edit-advanced-details > summary::-webkit-details-marker { display: none; }
+.edit-advanced-details > summary::before { content: "▸ "; }
+.edit-advanced-details[open] > summary::before { content: "▾ "; }
+.edit-advanced-details > .edit-advanced-body { margin-top: 10px; }
+
+@media (max-width: 900px) {
+  .edit-form-columns { grid-template-columns: 1fr; }
+}
+
+.playlist-checkbox-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  padding: 10px 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.playlist-checkbox {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 6px !important;
+  font-weight: 400;
+  font-size: 0.85rem;
+  color: var(--text);
+  white-space: nowrap;
+}
+.playlist-checkbox input { width: auto; }
+
+.edit-panel-actions { margin-top: 4px; }
+.btn-primary {
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.15s, transform 0.1s;
+}
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-primary:active { transform: scale(0.98); }
+
+.edit-panel-secondary {
+  display: flex; gap: 10px; flex-wrap: wrap;
+  margin-top: 18px; padding-top: 16px; border-top: 1px dashed var(--border);
+}
+.edit-panel-secondary button {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+.edit-panel-secondary button:hover { border-color: var(--accent); color: var(--accent); }
+
+button.danger, .danger { color: var(--danger); border-color: var(--danger) !important; }
+.edit-panel-secondary button.danger:hover { background: var(--danger); color: #fff; }
+button.small { font-size: 0.8rem; padding: 4px 10px; }
+button.feature-btn { color: var(--accent); border-color: var(--accent) !important; }
+.edit-panel-secondary button.feature-btn:hover { background: var(--accent); color: #fff; }
+
+@media (max-width: 640px) {
+  .edit-form-grid { grid-template-columns: 1fr; }
+}
+
+.filepath-info { margin-top: 10px; color: var(--text-muted); font-size: 0.72rem; word-break: break-all; }
+
+.related-card {
+  /* Cases doublées à droite du lecteur : vignette 16/9 large, titre
+     complet visible (2 lignes max) sans débordement ni masquage. */
+  display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; padding: 6px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.15s ease;
+  overflow: hidden;
+}
+.related-card:hover { background: var(--bg-card); }
+.related-card .thumb-wrap.related-thumb {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  flex-shrink: 0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.player-related h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0 0 10px 0;
+  color: var(--text);
+}
+.related-title {
+  font-size: 0.88rem;
+  font-weight: 500;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  max-height: 2.6em;
+}
+.related-meta { color: var(--text-muted); font-size: 0.75rem; margin-top: 2px; }
+
+/* ---- Guide / tutoriel (page Paramètres) ---- */
+.guide-block {
+  margin-bottom: 32px; max-width: 760px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 18px 20px;
+}
+.guide-block h2 { font-size: 1.1rem; margin-bottom: 4px; }
+.guide-intro { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 14px; }
+.guide-toc { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.guide-toc a {
+  font-size: 0.8rem; color: var(--text); text-decoration: none;
+  padding: 5px 10px; border: 1px solid var(--border); border-radius: 999px;
+  background: var(--bg);
+}
+.guide-toc a:hover { border-color: var(--accent); color: var(--accent); }
+.guide-step { border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; background: var(--bg); }
+.guide-step:last-child { margin-bottom: 0; }
+.guide-step > summary {
+  cursor: pointer; list-style: none; padding: 10px 14px;
+  font-weight: 600; font-size: 0.92rem; display: flex; align-items: center; gap: 8px;
+}
+.guide-step > summary::-webkit-details-marker { display: none; }
+.guide-step > summary::before { content: "▸"; color: var(--accent); font-size: 0.8rem; }
+.guide-step[open] > summary::before { content: "▾"; }
+.guide-step-num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--accent); color: #fff; font-size: 0.75rem; font-weight: 700;
+  flex-shrink: 0;
+}
+.guide-step-body { padding: 2px 14px 14px 44px; color: var(--text); font-size: 0.87rem; line-height: 1.55; }
+.guide-step-body p { margin: 0 0 10px 0; }
+.guide-step-body p:last-child { margin-bottom: 0; }
+.guide-step-body ol, .guide-step-body ul { margin: 0 0 10px 0; padding-left: 20px; }
+.guide-step-body li { margin-bottom: 4px; }
+.guide-step-body code { background: var(--bg-card); padding: 1px 6px; border-radius: 4px; }
+.guide-note {
+  margin-top: 8px; padding: 8px 12px; border-radius: 6px;
+  background: var(--bg-card); border-left: 3px solid var(--accent);
+  font-size: 0.83rem; color: var(--text-muted);
+}
+.guide-note.guide-warn { border-left-color: var(--danger); }
+.guide-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 10px 0; }
+.guide-compare > div { border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+.guide-compare h4 { font-size: 0.85rem; margin: 0 0 6px 0; color: var(--accent); }
+.guide-compare p { font-size: 0.82rem; margin: 0; color: var(--text-muted); }
+@media (max-width: 640px) {
+  .guide-compare { grid-template-columns: 1fr; }
+  .guide-step-body { padding-left: 14px; }
+}
+
+/* ---- Paramètres ---- */
+.settings-block { margin-bottom: 32px; max-width: 700px; }
+.settings-block h2 { font-size: 1.05rem; margin-bottom: 6px; }
+.muted { color: var(--text-muted); font-size: 0.9rem; }
+
+.folder-list { list-style: none; padding: 0; margin: 12px 0; }
+.folder-list li {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 12px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; margin-bottom: 6px;
+  font-family: monospace; font-size: 0.85rem;
+}
+
+/* Carte "Scanner la bibliothèque" : présentation agrandie et plus
+   intuitive (icône, gros bouton d'action, statut visuel clair par
+   couleur/icône) — même formulaire, mêmes champs, même logique de
+   statut (voir <script> pollScanStatus) qu'avant, uniquement la mise en
+   forme change. */
+.scan-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 22px 24px;
+}
+.scan-card-header { display: flex; align-items: flex-start; gap: 16px; }
+.scan-card-icon {
+  flex-shrink: 0;
+  width: 48px; height: 48px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+}
+.scan-card-heading h2 { font-size: 1.15rem; margin: 0 0 6px 0; }
+.scan-card-heading .muted { font-size: 0.92rem; line-height: 1.55; margin: 0; }
+
+.scan-card-action { margin-top: 18px; }
+.btn-scan {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 14px 28px;
+  font-size: 1rem;
+  border-radius: 10px;
+}
+.btn-scan-icon { font-size: 0.85em; }
+.btn-scan:disabled { opacity: 0.6; cursor: default; transform: none; }
+
+.scan-progress {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  transition: border-color 0.2s;
+}
+.scan-progress.is-done { border-left-color: #16a34a; }
+.scan-progress.is-error { border-left-color: var(--danger); }
+.scan-progress-head {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 10px;
+}
+.scan-phase-icon { font-size: 1.1rem; flex-shrink: 0; }
+.scan-progress.is-running .scan-phase-icon { animation: scan-spin 1.4s linear infinite; }
+@keyframes scan-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.scan-text { flex: 1; font-size: 0.92rem; color: var(--text); }
+.scan-progress.is-error .scan-text { color: var(--danger); }
+.scan-percent { font-size: 0.88rem; font-weight: 700; color: var(--accent); min-width: 3em; text-align: right; }
+.scan-progress.is-done .scan-percent { color: #16a34a; }
+
+.progress-bar { width: 100%; height: 8px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
+.progress-bar-lg { height: 10px; }
+.progress-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.3s; }
+.scan-progress.is-done .progress-fill { background: #16a34a; }
+.scan-progress.is-error .progress-fill { background: var(--danger); }
+.scan-progress.is-running .progress-fill {
+  background-image: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+  background-size: 60px 100%;
+  background-repeat: no-repeat;
+  background-color: var(--accent);
+  animation: scan-shimmer 1.2s linear infinite;
+}
+@keyframes scan-shimmer { from { background-position: -60px 0; } to { background-position: 100% 0; } }
+
+@media (max-width: 640px) {
+  .scan-card { padding: 18px; }
+  .scan-card-header { gap: 12px; }
+  .scan-card-icon { width: 40px; height: 40px; font-size: 1.15rem; }
+  .btn-scan { width: 100%; justify-content: center; }
+}
+
+code { background: var(--bg-card); border: 1px solid var(--border); padding: 1px 6px; border-radius: 4px; }
+
+/* ---- Popup de modification rapide des métadonnées ---- */
+.modal-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-overlay.open { display: flex; }
+.modal-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  max-width: 640px;
+  width: 100%;
+  max-height: 88vh;
+  overflow-y: auto;
+  padding: 20px 24px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.45);
+}
+.modal-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 14px;
+}
+.modal-header h3 { margin: 0; font-size: 1.05rem; }
+.quick-edit-add-actions {
+  margin: 0 0 16px; padding-bottom: 14px; border-bottom: 1px solid var(--border);
+}
+.modal-loading { color: var(--text-muted); padding: 24px 0; text-align: center; }
+
+/* Bouton "✎" (Modifier les métadonnées) : icône ronde en superposition sur
+   le coin bas-gauche de la vignette (comme le bouton favori ♥ en haut à
+   droite), plutôt qu'un bouton pleine largeur "✎ Modifier les métadonnées"
+   sous la carte - qui prenait beaucoup de hauteur et réduisait le nombre
+   de vidéos visibles à l'écran, notamment sur la grille compacte à 8
+   vidéos par page (accueil / sous-playlist, voir unified_toolbar). Aucun
+   changement de comportement : mêmes classes ("quick-edit-btn"/
+   "js-quick-edit") et même data-video-id, le clic ouvre toujours la même
+   popup rapide (voir openModal dans main.js). */
+.quick-edit-btn {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  z-index: 3;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.55);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.92rem;
+  line-height: 1;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  transition: transform 0.12s ease, color 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+}
+.quick-edit-btn:hover { transform: scale(1.08); color: #fff; border-color: var(--accent); background: rgba(0, 0, 0, 0.72); }
+
+/* Tant qu'un scan des disques est en cours (voir le sondage /scan/status
+   dans main.js), les cartes de la grille peuvent apparaître/se mettre à
+   jour en temps réel avant d'être stabilisées : le bouton "✎ Modifier les
+   métadonnées" reste donc masqué jusqu'à la fin du scan. */
+body.scan-in-progress .quick-edit-btn { display: none; }
+
+/* ---- Bouton favori/like (♥) : accès rapide indépendant de la note par
+   étoiles. Sur les cartes de la grille, positionné en superposition sur
+   le coin de la vignette ; sur la page vidéo, affiché à côté du titre.
+   ".is-fav" = état actif (coeur plein/rouge), sinon contour discret. ---- */
+.fav-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.45);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.12s ease, color 0.12s ease, background 0.12s ease;
+}
+.fav-btn:hover { transform: scale(1.08); color: #ffffff; }
+.fav-btn.is-fav { color: var(--danger); background: rgba(0, 0, 0, 0.55); border-color: var(--danger); }
+.fav-btn.fav-toggling { opacity: 0.6; pointer-events: none; }
+
+.video-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+/* min-width: 0 est indispensable ici : par défaut, un élément flex refuse
+   de rétrécir sous la largeur intrinsèque de son contenu (min-width: auto
+   implicite), ce qui annule à lui seul la coupure de mots ajoutée
+   ci-dessus sur .video-title et laissait le titre pousser toute la ligne
+   (donc toute la page) en largeur pour un titre long sans espaces - voir
+   le même principe déjà appliqué à .card-wrap plus haut dans ce fichier. */
+.video-title-row .video-title { margin: 0; flex: 1; min-width: 0; }
+.fav-btn-detail {
+  position: static;
+  width: 38px;
+  height: 38px;
+  font-size: 1.2rem;
+  background: var(--bg-card);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.fav-btn-detail.is-fav { color: var(--danger); border-color: var(--danger); background: var(--bg-card); }
+
+/* ---- Page Organiser (catégories / playlists) ---- */
+.organize-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  align-items: start;
+}
+.organize-columns-single { grid-template-columns: minmax(0, 640px); }
+.organize-col h2 { font-size: 1.05rem; margin: 0 0 12px; }
+
+.organize-new-form {
+  display: flex; gap: 8px; margin-bottom: 14px;
+}
+.organize-new-form input {
+  flex: 1; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--bg-card); color: var(--text);
+}
+.organize-new-form button {
+  padding: 8px 14px; border-radius: 8px; border: 1px solid var(--accent);
+  background: var(--accent); color: #fff; cursor: pointer; white-space: nowrap;
+}
+.organize-new-form button:hover { background: var(--accent-hover); }
+
+.organize-toolbar {
+  display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; align-items: flex-start;
+}
+
+/* Barre Organiser modernisée (toujours visible, comme Tags) */
+.organize-toolbar-modern {
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.org-search-wrap {
+  position: relative;
+  flex: 1 1 180px;
+  min-width: 140px;
+}
+.org-search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.85rem;
+  opacity: 0.55;
+  pointer-events: none;
+}
+.org-search-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 9px 12px 9px 32px !important;
+  border-radius: 10px !important;
+}
+.org-search-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+.org-toolbar-select {
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.org-date-range-inline {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.org-date-range-inline input[type="date"] {
+  padding: 7px 8px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.8rem;
+}
+
+/* Cartes Organiser : actions au survol, badge compteur — tailles de case inchangées */
+.org-card-modern {
+  overflow: hidden;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+.org-card-modern:hover {
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+  transform: translateY(-1px);
+}
+.org-card-actions {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 4;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  pointer-events: none;
+}
+.org-card-modern:hover .org-card-actions,
+.org-card-modern:focus-within .org-card-actions {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.org-card-actions .icon-btn {
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  border: none;
+  backdrop-filter: blur(6px);
+}
+.org-card-actions .icon-btn:hover {
+  background: rgba(0, 0, 0, 0.75);
+}
+.org-card-actions .icon-btn-danger:hover {
+  background: rgba(200, 50, 50, 0.9);
+}
+.org-card-count-badge {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  z-index: 3;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+  line-height: 1.3;
+  backdrop-filter: blur(4px);
+  pointer-events: none;
+}
+.org-cards-list.view-grid .org-card-modern {
+  padding: 0;
+}
+.org-cards-list.view-grid .org-card-modern .org-images-preview {
+  margin-top: 0;
+}
+.org-cards-list.view-grid .org-card-modern .org-cover-frame {
+  border-radius: 0;
+  border: none;
+  border-bottom: 1px solid var(--border);
+}
+.org-cards-list.view-grid .org-card-modern .org-card-head {
+  padding: 8px 12px 10px;
+  margin-top: 0;
+}
+.org-cards-list.view-grid .org-card-modern .org-card-edit,
+.org-cards-list.view-grid .org-card-modern .org-comment-preview,
+.org-cards-list.view-grid .org-card-modern .org-card-created,
+.org-cards-list.view-grid .org-card-modern .org-card-manual-date {
+  margin-left: 12px;
+  margin-right: 12px;
+}
+.org-cards-list.view-grid .org-card-modern .org-card-edit {
+  margin-bottom: 10px;
+}
+.org-cover-placeholder {
+  font-size: 2rem !important;
+  opacity: 0.45;
+  background: linear-gradient(145deg, color-mix(in srgb, var(--accent) 10%, var(--bg)), var(--bg));
+}
+
+.organize-new-form input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+.organize-new-form {
+  align-items: center;
+}
+.organize-new-form input {
+  border-radius: 10px;
+  padding: 9px 12px;
+}
+.organize-new-form button {
+  border-radius: 10px;
+  padding: 9px 16px;
+  font-weight: 600;
+}
+
+
+/* Menus déroulants "Filtrer" et "Trier" */
+.org-dropdown { position: relative; }
+.org-dropdown summary {
+  display: flex; align-items: center; gap: 6px;
+  cursor: pointer; list-style: none; user-select: none;
+  padding: 7px 12px; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--bg-card); color: var(--text); font-size: 0.85rem;
+}
+.org-dropdown summary::-webkit-details-marker,
+.org-dropdown summary::marker { display: none; content: ""; }
+.org-dropdown-arrow { font-size: 0.7rem; color: var(--text-muted); transition: transform 0.15s ease; }
+.org-dropdown[open] summary { color: var(--accent); border-color: var(--accent); }
+.org-dropdown[open] .org-dropdown-arrow { transform: rotate(180deg); color: var(--accent); }
+
+.org-dropdown-panel {
+  position: absolute; top: calc(100% + 6px); left: 0; z-index: 6;
+  display: flex; flex-direction: column; gap: 10px;
+  min-width: 220px; padding: 12px;
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.25);
+}
+.org-dropdown-field {
+  display: flex; flex-direction: column; gap: 4px;
+  font-size: 0.78rem; font-weight: 600; color: var(--text-muted);
+}
+.org-filter-input {
+  padding: 7px 10px; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--bg); color: var(--text); font-size: 0.85rem;
+}
+.org-rating-filter,
+.org-sort-select {
+  padding: 7px 10px; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--bg); color: var(--text); font-size: 0.85rem;
+}
+.org-date-range { display: flex; align-items: center; gap: 6px; }
+.org-date-range input[type="date"] {
+  flex: 1; min-width: 0; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--bg); color: var(--text); font-size: 0.8rem;
+}
+.org-date-range-sep { color: var(--text-muted); font-size: 0.8rem; }
+.org-card-created { font-size: 0.76rem; opacity: 0.7; margin-top: 4px; }
+
+.org-card {
+  position: relative;
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
+  padding: 14px 18px; margin-bottom: 12px;
+}
+.org-card-delete {
+  /* Positionnée via .org-card-actions (survol) ; repli si hors actions */
+  z-index: 1;
+}
+.org-card > .org-card-delete {
+  position: absolute; top: 10px; right: 10px;
+  background: var(--bg-card);
+}
+
+/* Vue grille : plus de cases via auto-fill (minmax 240px), sans réduire les
+   polices. Sur grand écran on affiche 3–4 colonnes au lieu de 2 fixes.
+   La photo occupe toute la largeur de la case (voir .org-images-preview). */
+.org-cards-list.view-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 10px;
+  align-items: start;
+}
+.org-cards-list.view-grid .org-card {
+  margin-bottom: 0;
+  padding: 10px 10px;
+}
+
+.org-card-link { display: block; color: inherit; text-decoration: none; }
+.org-card-link:hover .org-card-title strong { color: var(--accent); text-decoration: underline; }
+
+.org-card-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 8px; }
+.org-card-title { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.org-stars-display { color: var(--accent); font-size: 0.9rem; letter-spacing: 1px; }
+.org-card-count { font-size: 0.82rem; white-space: nowrap; }
+
+.org-comment-preview {
+  color: var(--text-muted); font-size: 0.85rem; margin: 8px 0 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* L'image de couverture reste toujours en pourcentage (jamais de plafond
+   fixe en pixels), donc jamais de débordement, quelle que soit la case.
+   La vue grille utilise désormais exactement les mêmes proportions que la
+   vue liste (cases identiques, simplement réparties en colonnes). */
+.org-images-preview {
+  margin-top: 10px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+/* En vue grille : photo agrandie à toute la largeur de la case (façon carte d'identité),
+   pour mieux la voir. Le mécanisme de flexibilité (ratio 16:9, object-fit, letterbox)
+   défini plus bas reste strictement le même, seule la largeur du conteneur change. */
+.org-cards-list.view-grid .org-images-preview {
+  max-width: 100%;
+}
+.org-cover-frame {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  padding-top: 56.25%; /* ratio 16:9, indépendant du support CSS aspect-ratio */
+  border-radius: 8px;
+  overflow: hidden;
+  box-sizing: border-box;
+  background: var(--bg-elevated, #14141a);
+  border: 1px solid var(--border);
+}
+/* Fond flouté qui remplit toute la case (technique "letterbox"), placé sous la photo réelle */
+.org-cover-frame .org-cover-bg {
+  position: absolute;
+  top: -10%; left: -10%;
+  width: 120%; height: 120%;
+  object-fit: cover;
+  object-position: center;
+  filter: blur(20px) brightness(0.55) saturate(1.15);
+  transform: scale(1.05);
+  z-index: 0;
+}
+/* Photo réelle : jamais rognée, toujours entièrement visible, centrée dans la case */
+.org-cover-frame .org-cover-main {
+  position: absolute; inset: 0;
+  display: block;
+  width: 100%; height: 100%; max-width: 100%;
+  object-fit: contain; object-position: center;
+  z-index: 1;
+  box-sizing: border-box;
+}
+.org-cover-placeholder {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px dashed var(--border); border-radius: 8px;
+  font-size: 0.78rem; text-align: center; padding: 4px;
+  box-sizing: border-box;
+}
+
+/* Icône "lecture" au survol d'une case catégorie / playlist / sous-playlist :
+   un cercle rouge transparent avec un triangle "play", pour suggérer qu'on
+   peut cliquer la case pour regarder son contenu (façon YouTube). */
+.org-play-overlay {
+  position: absolute; inset: 0;
+  z-index: 3;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  pointer-events: none;
+}
+/* Upload inline sur la couverture (Organiser) */
+.org-cover-frame.js-org-instant-upload {
+  cursor: pointer;
+  display: block;
+}
+.org-cover-upload-hint {
+  position: absolute; inset: 0; z-index: 2;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.55); color: #fff;
+  font-size: 0.8rem; font-weight: 600; text-align: center; padding: 6px;
+  opacity: 0; transition: opacity 0.15s ease;
+  pointer-events: none;
+}
+.org-cover-frame.js-org-instant-upload:hover .org-cover-upload-hint,
+.org-cover-frame.js-org-instant-upload.drag-over .org-cover-upload-hint { opacity: 1; }
+.org-cover-frame.js-org-instant-upload.drag-over {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+.org-cover-frame.js-org-instant-upload input[type="file"] { display: none; }
+.org-card-modern.org-card-uploading .org-cover-upload-hint {
+  opacity: 1; background: rgba(0,0,0,0.65);
+}
+.org-card-modern.org-card-uploading .js-org-instant-upload { pointer-events: none; }
+/* Play visible au survol, mais SEULE l'icône reçoit les clics
+   (sinon l'overlay plein cadre bloquait l'upload photo). */
+.org-cover-frame.js-org-instant-upload:hover .org-play-overlay,
+.org-cover-frame.js-org-instant-upload:focus-within .org-play-overlay {
+  opacity: 1;
+  pointer-events: none;
+}
+.org-cover-frame.js-org-instant-upload:hover .org-play-icon,
+.org-cover-frame.js-org-instant-upload:focus-within .org-play-icon {
+  pointer-events: auto;
+}
+
+.org-card-link:hover .org-play-overlay,
+.org-card-link:focus-visible .org-play-overlay,
+.org-play-overlay:focus-visible {
+  opacity: 1;
+}
+.org-play-icon {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  background: rgba(220, 38, 38, 0.32);
+  border: 2px solid rgba(220, 38, 38, 0.75);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: auto;
+  cursor: pointer;
+}
+.org-play-icon::after {
+  content: "";
+  width: 0; height: 0;
+  margin-left: 4px; /* recentre optiquement le triangle dans le cercle */
+  border-style: solid;
+  border-width: 9px 0 9px 15px;
+  border-color: transparent transparent transparent #fff;
+}
+
+.org-card-edit { margin-top: 10px; }
+.org-card-edit summary {
+  cursor: pointer; list-style: none;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border-radius: 20px;
+  border: 1px solid var(--accent); color: var(--accent);
+  font-size: 0.82rem; font-weight: 700;
+  background: var(--bg-card);
+  box-shadow: var(--shadow);
+  transition: background 0.15s, color 0.15s;
+}
+.org-card-edit summary::-webkit-details-marker { display: none; }
+.org-card-edit summary:hover { background: var(--accent); color: #fff; }
+.org-card-edit[open] summary { background: var(--accent); color: #fff; }
+
+.org-edit-form {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; margin-top: 10px;
+}
+.org-edit-form label {
+  display: flex; flex-direction: column; gap: 5px; font-size: 0.8rem; font-weight: 600; color: var(--text-muted);
+}
+.org-edit-form input[type="text"], .org-edit-form select, .org-edit-form textarea {
+  background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+  color: var(--text); padding: 8px 10px; font-family: inherit; font-size: 0.88rem;
+}
+.org-edit-form textarea { resize: vertical; }
+
+.org-images-edit { display: flex; gap: 10px; flex-wrap: wrap; }
+.org-image-slot {
+  width: 96px; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  font-size: 0.72rem; color: var(--text-muted);
+}
+.org-image-slot img { width: 96px; min-width: 96px; height: 60px; min-height: 0; object-fit: cover; object-position: center; border-radius: 8px; border: 1px solid var(--border); }
+.org-image-placeholder {
+  width: 96px; height: 60px; display: flex; align-items: center; justify-content: center;
+  border: 1px dashed var(--border); border-radius: 8px; text-align: center; padding: 4px;
+}
+.org-image-slot input[type="file"] { font-size: 0.68rem; width: 96px; }
+
+.org-image-slot-single { width: 100%; max-width: 200px; }
+.org-image-slot-single img,
+.org-image-slot-single .org-image-placeholder {
+  width: 100%; max-width: 200px; aspect-ratio: 5 / 3; height: auto; box-sizing: border-box;
+}
+.org-image-slot-single input[type="file"] { width: 100%; max-width: 200px; }
+
+/* Aperçu instantané (glisser-déposer + sélection) de la photo de couverture,
+   pour les catégories comme pour les playlists. */
+.org-image-slot { border-radius: 10px; transition: box-shadow 0.15s, background 0.15s; }
+.org-image-slot img, .org-image-slot .org-image-placeholder { transition: filter 0.15s, opacity 0.15s; }
+.org-image-slot.drag-over { box-shadow: 0 0 0 2px var(--accent); background: rgba(200, 30, 60, 0.06); }
+.org-image-slot.drag-over img, .org-image-slot.drag-over .org-image-placeholder { opacity: 0.6; }
+.org-image-slot.has-pending-preview { position: relative; }
+.org-image-slot.has-pending-preview img { filter: brightness(0.92); }
+.org-image-slot.has-pending-preview::after {
+  content: "Nouvelle photo — à enregistrer";
+  display: block; margin-top: 2px; font-size: 0.62rem; font-weight: 600;
+  color: var(--accent); text-align: center; width: 100%;
+}
+
+@media (max-width: 900px) {
+  .organize-columns { grid-template-columns: 1fr; }
+  .sidebar { width: 100%; height: calc(100vh - 54px); max-height: calc(100vh - 54px); padding: 14px 16px 18px; }
+  .sidebar-sections { gap: 18px; }
+  .player-layout { flex-direction: column; }
+  .player-related { width: 100%; max-height: none; }
+  .featured-banner { flex-direction: column; }
+  .featured-banner img { width: 100%; }
+}
+
+/* ============ Sous-playlists ============ */
+
+/* ---- Fil d'ariane (page playlist, quand c'est une sous-playlist) ---- */
+.playlist-breadcrumb {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  font-size: 0.82rem; color: var(--text-muted); margin-bottom: 10px;
+}
+.playlist-breadcrumb a { color: var(--accent); }
+.playlist-breadcrumb a:hover { text-decoration: underline; }
+.playlist-breadcrumb .breadcrumb-sep { opacity: 0.6; }
+.playlist-breadcrumb .breadcrumb-current { color: var(--text); font-weight: 600; }
+
+/* ---- Panneau latéral : indicateur discret quand une playlist a des
+   sous-playlists (elles ne sont plus listées ici, il faut cliquer sur la
+   playlist pour y accéder — potentiellement trop nombreuses pour le panneau). ---- */
+.side-sub-hint {
+  font-size: 0.78em;
+  opacity: 0.7;
+  flex-shrink: 0;
+  margin-left: 4px;
+}
+.side-item-label {
+  min-width: 0;
+}
+
+/* ---- Cases à cocher "playlists" (popup de modification rapide + page vidéo) :
+   les sous-playlists sont légèrement indentées et marquées d'un ↳ pour bien
+   les distinguer visuellement des playlists principales. ---- */
+.playlist-checkbox-sub {
+  color: var(--text-muted);
+}
+.playlist-checkbox-sub-marker {
+  opacity: 0.55;
+  margin-right: 2px;
+}
+
+/* ---- Page Organiser : cartes de sous-playlists indentées sous leur
+   playlist parente, avec un repère visuel discret (↳ + bordure atténuée). ---- */
+.org-card-sub {
+  border-left: 3px solid var(--orange);
+  background: color-mix(in srgb, var(--orange) 5%, var(--bg-card));
+}
+.org-card-sub-marker {
+  position: absolute; top: 14px; left: -2px;
+  transform: translateX(-100%);
+  color: var(--orange); opacity: 0.7; font-size: 0.95rem;
+}
+.organize-new-parent-select {
+  padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--bg-card); color: var(--text); font-size: 0.85rem;
+  max-width: 220px;
+}
+.org-hint {
+  margin: -8px 0 14px; font-size: 0.78rem;
+}
+
+/* ---- Page playlist dédiée : section de gestion des sous-playlists ---- */
+.sub-playlists-section {
+  margin: 12px 0 16px;
+  padding: 12px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.sub-playlists-head {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 8px; margin-bottom: 8px;
+}
+.sub-playlists-head h2 { margin: 0; font-size: 1.02rem; }
+
+/* Bascule d'affichage playlist : Sous-playlists | Vidéos | Les deux */
+.playlist-view-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 2px;
+  margin: 0 0 10px;
+}
+.playlist-view-toggle button {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.playlist-view-toggle button:hover {
+  color: var(--text);
+  background: rgba(0, 0, 0, 0.04);
+}
+[data-theme="dark"] .playlist-view-toggle button:hover,
+[data-theme="turquoise"] .playlist-view-toggle button:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+.playlist-view-toggle button.is-active {
+  background: var(--accent);
+  color: #fff;
+}
+.playlist-view-toggle button.is-active:hover {
+  background: var(--accent);
+  color: #fff;
+}
+/* Masquage des sections selon le mode (JS pose data-playlist-view sur body) */
+body[data-playlist-view="subs"] .playlist-videos-block { display: none !important; }
+body[data-playlist-view="videos"] .sub-playlists-section { display: none !important; }
+/* mode "both" : tout visible (défaut) */
+
+/* Bloc "Créer une sous-playlist, filtrer, trier" repliable : regroupe le
+   formulaire de création et la barre filtre/tri (organize-toolbar),
+   repliés par défaut pour ne pas occuper de place inutilement au-dessus
+   de la grille des sous-playlists (surtout si elle en contient beaucoup). */
+.org-tools-panel { margin-bottom: 10px; }
+.org-tools-panel > summary {
+  cursor: pointer; list-style: none; user-select: none;
+  display: inline-flex; align-items: center; gap: 6px;
+  color: var(--accent); font-size: 0.88rem; font-weight: 600;
+  padding: 6px 11px; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--bg-card);
+}
+.org-tools-panel > summary::-webkit-details-marker,
+.org-tools-panel > summary::marker { display: none; content: ""; }
+.org-tools-panel[open] > summary .org-dropdown-arrow { transform: rotate(180deg); }
+.org-tools-panel-body {
+  margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border);
+}
+.org-tools-panel-body .organize-new-form { margin-bottom: 12px; }
+
+.sub-playlists-list.org-cards-list {
+  margin-top: 4px;
+}
+.sub-playlists-list .org-card { margin-left: 0 !important; }
+.sub-playlists-list .org-card-sub-marker { display: none; }
+
+/* Aperçu des sous-playlists (page playlist dédiée) : auto-fill pour plus
+   de cases sans réduire les polices. Ratio "carte bancaire" (~1,586:1)
+   pour des vignettes compactes, image entièrement visible (contain + flou). */
+.sub-playlists-list.org-cards-list.view-grid {
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px;
+}
+.sub-playlists-list.org-cards-list.view-grid .org-cover-frame {
+  padding-top: 63.05%;
+}
+.sub-playlists-list.org-cards-list.view-grid .org-card {
+  padding: 8px;
+}
+@media (max-width: 480px) {
+  .sub-playlists-list.org-cards-list.view-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .sub-playlists-head { flex-direction: column; align-items: stretch; }
+  .organize-new-parent-select { max-width: none; }
+}
+
+/* ---- Mini-dashboard en tête de la page Organiser ---- */
+.dashboard-stats {
+  display: flex; flex-wrap: wrap; gap: 10px;
+  margin: 4px 0 12px;
+}
+.dashboard-stat {
+  flex: 1 1 120px;
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 12px 14px;
+  background: var(--bg-elevated);
+  color: #fff;
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  min-width: 0;
+}
+.dashboard-stat-num { font-size: 1.45rem; font-weight: 700; line-height: 1.1; }
+.dashboard-stat-label { font-size: 0.72rem; opacity: 0.85; text-transform: uppercase; letter-spacing: 0.03em; }
+.dashboard-stat:nth-child(2) { background: var(--orange); }
+.dashboard-stat:nth-child(3) { background: color-mix(in srgb, var(--orange) 70%, var(--bg-elevated)); }
+.dashboard-stat:nth-child(1) { background: var(--rose); }
+.dashboard-stat:nth-child(4) { background: color-mix(in srgb, var(--accent) 75%, var(--bg-elevated)); }
+
+.dashboard-shortcuts {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  margin: 0 0 16px;
+}
+.dashboard-shortcut {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text);
+  text-decoration: none;
+  font-size: 0.82rem;
+  font-weight: 500;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.dashboard-shortcut:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, var(--bg-card));
+}
+
+@media (max-width: 640px) {
+  .dashboard-stats { gap: 8px; }
+  .dashboard-stat { flex: 1 1 45%; padding: 10px 12px; }
+  .dashboard-shortcuts { gap: 6px; }
+  .dashboard-shortcut { font-size: 0.78rem; padding: 6px 10px; }
+}
+
+/* ---- Bouton "🏷 Tags" du panneau (ouvre la fenêtre des tags) ---- */
+.tags-modal-open-btn {
+  width: auto;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+/* ---- Fenêtre Tags modernisée (recherche, filtres, cartes) ---- */
+.modal-box-wide { max-width: min(96vw, 2000px); }
+.tags-modal-box { display: flex; flex-direction: column; gap: 0; }
+.tags-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.tags-modal-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.tags-modal-title-row h3 { margin: 0; }
+.tags-modal-count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.6em;
+  height: 1.6em;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  background: var(--accent);
+  color: #fff;
+  line-height: 1;
+}
+
+/* Barre recherche + filtres (toujours visibles) */
+.tags-modal-toolbar-modern {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.tags-modal-search-wrap {
+  position: relative;
+  flex: 1 1 200px;
+  min-width: 160px;
+}
+.tags-modal-search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.85rem;
+  opacity: 0.55;
+  pointer-events: none;
+}
+.tags-modal-search-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 9px 12px 9px 32px !important;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.9rem;
+}
+.tags-modal-search-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+.tags-modal-select {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  padding: 8px 10px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.tags-modal-result-count {
+  font-size: 0.8rem;
+  white-space: nowrap;
+  margin-left: auto;
+}
+
+/* Création rapide */
+.tags-modal-create-row {
+  display: flex; gap: 8px; margin-bottom: 6px;
+}
+.tags-modal-create-modern {
+  margin-bottom: 4px;
+}
+.tags-modal-create-row input[type="text"] {
+  flex: 1;
+  background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
+  color: var(--text); padding: 9px 12px; font-family: inherit; font-size: 0.9rem;
+}
+.tags-modal-create-row input[type="text"]:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+.tags-modal-create-hint {
+  font-size: 0.8rem;
+  margin: 0 0 10px;
+  min-height: 1.2em;
+}
+.tags-modal-create-hint.is-error { color: #e85d5d; }
+.tags-modal-create-hint.is-ok { color: var(--accent); }
+
+/* Liste de cartes */
+.tags-modal-list.org-cards-list.view-grid {
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+  max-height: min(70vh, 720px);
+  overflow-y: auto;
+  padding: 4px 2px 8px 0;
+  margin: 0;
+}
+.tags-modal-list .org-card {
+  padding: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--bg-elevated, var(--bg));
+  border: 1px solid var(--border);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+.tags-modal-list .org-card:hover {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+  transform: translateY(-1px);
+}
+.tags-modal-list .org-card-title strong {
+  font-size: 0.88rem; overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap; max-width: 100%;
+}
+.tags-modal-list .org-card-count { font-size: 0.74rem; }
+.tags-modal-list .org-card-head {
+  padding: 8px 10px 10px;
+}
+.tags-modal-list .tag-card-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+/* État vide */
+.tags-modal-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 40px 16px 32px;
+}
+.tags-modal-empty-icon {
+  font-size: 2.4rem;
+  opacity: 0.55;
+  margin-bottom: 8px;
+}
+.tags-modal-empty-title {
+  font-weight: 700;
+  font-size: 1rem;
+  margin: 0 0 6px;
+}
+
+/* Animation d'apparition d'une nouvelle carte */
+@keyframes tag-card-in {
+  from { opacity: 0; transform: scale(0.94); }
+  to { opacity: 1; transform: scale(1); }
+}
+.tag-card-modern.tag-card-just-added {
+  animation: tag-card-in 0.28s ease;
+}
+
+.org-cover-frame-tag { padding-top: 100%; border-radius: 10px; }
+.org-cover-frame-tag .org-cover-placeholder {
+  font-size: 0.78rem; line-height: 1.3; padding: 8px;
+  overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ---- Carte tag : image + actions au survol ---- */
+.tag-card-modern {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+.tag-card-actions {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 4;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  pointer-events: none;
+}
+.tag-card-modern:hover .tag-card-actions,
+.tag-card-modern:focus-within .tag-card-actions {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.tag-card-actions .icon-btn {
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  border: none;
+  backdrop-filter: blur(6px);
+}
+.tag-card-actions .icon-btn:hover {
+  background: rgba(0, 0, 0, 0.75);
+}
+.tag-card-actions .icon-btn-danger:hover {
+  background: rgba(200, 50, 50, 0.9);
+}
+
+.tag-card-cover {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding-top: 100%;
+  border-radius: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+  background: var(--bg-elevated, #14141a);
+  border: none;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+.tag-card-cover input[type="file"] { display: none; }
+.tag-card-cover .org-cover-bg {
+  position: absolute; top: -10%; left: -10%; width: 120%; height: 120%;
+  object-fit: cover; object-position: center;
+  filter: blur(20px) brightness(0.55) saturate(1.15);
+  transform: scale(1.05); z-index: 0;
+}
+.tag-card-cover .org-cover-main {
+  position: absolute; inset: 0; display: block;
+  width: 100%; height: 100%; max-width: 100%;
+  object-fit: contain; object-position: center; z-index: 1; box-sizing: border-box;
+}
+.tag-card-placeholder {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  border: none;
+  font-size: 0.85rem; line-height: 1.3; padding: 10px; text-align: center;
+  overflow: hidden; text-overflow: ellipsis; box-sizing: border-box;
+  background: linear-gradient(145deg, color-mix(in srgb, var(--accent) 12%, var(--bg)), var(--bg));
+}
+.tag-card-cover-hint {
+  position: absolute; inset: 0; z-index: 2;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.55); color: #fff;
+  font-size: 0.78rem; font-weight: 600; text-align: center; padding: 6px;
+  opacity: 0; transition: opacity 0.15s ease;
+  pointer-events: none;
+}
+.tag-card-cover:hover .tag-card-cover-hint,
+.tag-card-cover.drag-over .tag-card-cover-hint { opacity: 1; }
+.tag-card-cover.drag-over { box-shadow: inset 0 0 0 2px var(--accent); }
+.tag-card-uploading .tag-card-cover-hint {
+  opacity: 1; background: rgba(0,0,0,0.65);
+}
+.tag-card-uploading .tag-card-cover { pointer-events: none; }
+
+/* Badge compteur sur l'image */
+.tag-card-count-badge {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  z-index: 3;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+  line-height: 1.3;
+  backdrop-filter: blur(4px);
+  pointer-events: none;
+}
+.tag-card-count-text { display: none; }
+
+.tag-card-title-wrap strong { display: block; }
+.tag-card-rename-input {
+  width: 100%; background: var(--bg); border: 1px solid var(--accent);
+  border-radius: 6px; color: var(--text); padding: 3px 6px;
+  font-family: inherit; font-size: 0.88rem; font-weight: 600;
+  box-sizing: border-box;
+}
+
+/* ============ Champ "Playlists" (✎ Modifier les métadonnées) ============ */
+.playlist-field-modern {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ---- Puces récapitulatives des playlists/sous-playlists sélectionnées ---- */
+.playlist-selected-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 30px;
+  padding: 8px 10px;
+  background: color-mix(in srgb, var(--accent) 6%, var(--bg));
+  border: 1px solid color-mix(in srgb, var(--accent) 25%, var(--border));
+  border-radius: 8px;
+}
+.playlist-chips-empty { font-size: 0.8rem; align-self: center; }
+.playlist-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 4px 3px 10px;
+  border-radius: 14px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.playlist-chip-sub { background: color-mix(in srgb, var(--accent) 65%, #333); font-weight: 500; }
+.playlist-chip-remove {
+  border: none;
+  background: rgba(255,255,255,0.25);
+  color: #fff;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  font-size: 0.62rem;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.playlist-chip-remove:hover { background: rgba(255,255,255,0.45); }
+
+/* ---- Zone "Ajouter à une playlist principale" / "Ajouter à un sous-playlist" ---- */
+.playlist-add-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.playlist-add-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+/* ---- Indice affiché tant qu'aucune playlist principale n'est cochée
+   ci-dessus (donc aucun groupe de sous-playlists à afficher) ---- */
+.playlist-lock-hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+.playlist-lock-hint[hidden] { display: none; }
+.playlist-add-row-disabled {
+  opacity: 0.55;
+}
+.playlist-add-row-disabled .playlist-sub-groups { display: none; }
+
+/* ---- Groupes de sous-playlists : un par playlist principale cochée
+   ci-dessus (ou dont une sous-playlist est déjà cochée) ---- */
+.playlist-sub-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.playlist-sub-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  background: color-mix(in srgb, var(--accent) 5%, var(--bg));
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+/* Notre "display: flex" ci-dessus prenait le pas sur le "display: none" natif
+   de l'attribut [hidden] (une règle d'auteur l'emporte toujours sur celle du
+   navigateur, quelle que soit la spécificité) : les groupes de sous-playlists
+   masqués restaient donc visibles. On force explicitement le masquage ici. */
+.playlist-sub-group[hidden] {
+  display: none !important;
+}
+.playlist-sub-group-title {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--accent);
+  cursor: pointer;
+  user-select: none;
+  padding: 2px 0;
+}
+.playlist-sub-group[open] > .playlist-sub-group-title { margin-bottom: 2px; }
+.playlist-sub-group-title:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.playlist-sub-empty {
+  font-size: 0.78rem;
+  padding: 2px 0;
+}
+.playlist-new-sub-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border);
+}
+.playlist-new-sub-inline .js-new-sub-name {
+  flex: 1 1 160px;
+  min-width: 140px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.82rem;
+}
+.playlist-new-sub-inline .js-new-sub-name:focus { border-color: var(--accent); outline: none; }
+.playlist-add-btn {
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.playlist-add-btn:hover { opacity: 0.9; }
+.playlist-add-btn:disabled { opacity: 0.6; cursor: default; }
+
+/* ============================================================================
+   Page de lecture vidéo (body.video-page) : écran agrandi façon YouTube.
+   Le panneau vertical suit maintenant le même comportement que sur le reste
+   du site (masqué par défaut, contrôlé par le bouton ☰) : ne reste ici que
+   l'agrandissement du lecteur vidéo, qui profite de l'espace laissé libre.
+   ============================================================================ */
+@media (min-width: 901px) {
+  body.video-page .player-layout-wide .video-player {
+    max-height: 98vh;
+    min-height: 540px;
+  }
+  /* Colonne droite agrandie (360px) : cases plus grandes, en contrepartie
+     d'un écran de lecture un peu moins large */
+  body.video-page .player-layout-wide .player-related { width: 360px; }
+}
+
+/* ============================================================================
+   Cadrage fin du lecteur vidéo (complément additif, voir main.js /
+   initPlayerFineFit). Aucune règle existante ci-dessus n'est modifiée.
+   ============================================================================ */
+
+/* Petit espace avant le bouton plein écran, ajouté dynamiquement en JS
+   dans .speed-controls (réutilise déjà le style .speed-btn existant). */
+.player-fullscreen-btn { margin-left: auto; }
+
+/* Garantie absolue : en plein écran natif du navigateur, la vidéo occupe
+   tout l'écran (barre des tâches Windows comprise) en le remplissant
+   totalement (mode "ADAPTE" façon MX Player, cohérent avec le lecteur en
+   mode normal : recadrage plutôt que bandes noires), quel que soit son
+   format (paysage, portrait, très large...). Le "!important" est nécessaire ici
+   pour prendre le pas sur le style inline posé par le JS de cadrage fin.
+   C'est ".video-frame" (et non "#main-player" directement) qui est mis en
+   plein écran par le JS : ainsi la timeline et les boutons personnalisés
+   (lecture/pause, précédent/suivant, aléatoire, volume...), qui sont des
+   éléments frères de la vidéo à l'intérieur de ce cadre, restent affichés
+   par-dessus la vidéo en plein écran au lieu de disparaître. */
+.video-frame:fullscreen,
+.video-frame:-webkit-full-screen {
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+  background: #000;
+}
+.video-frame:fullscreen .video-player,
+.video-frame:-webkit-full-screen .video-player {
+  max-height: none !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover;
+  background: #000;
+}
+
+/* Masquage automatique en plein écran (façon YouTube) : la timeline et les
+   boutons restent affichés tant que la souris bouge (ou vient de bouger),
+   et se masquent avec le curseur dès qu'elle reste immobile un instant —
+   voir static/js/player-ui.js. En dehors du plein écran, ceci n'a aucun
+   effet : seul le survol (règles ci-dessus) régit l'affichage. Le
+   "!important" garantit que ce masquage l'emporte même si la souris se
+   trouve, au moment où elle s'immobilise, au-dessus du cadre vidéo (donc
+   techniquement en ":hover"). */
+.video-frame.controls-idle .player-overlay-bottom {
+  opacity: 0 !important;
+  transform: translateY(6px) !important;
+  pointer-events: none !important;
+}
+.video-frame:fullscreen.controls-idle,
+.video-frame:-webkit-full-screen.controls-idle {
+  cursor: none;
+}
+
+/* ============================================================================
+   Mini-lecteur flottant (façon YouTube) — voir static/js/player-persist.js
+   ============================================================================ */
+.mini-player-host {
+  position: fixed;
+  right: 18px;
+  /* Marge au-dessus de la barre des tâches Windows. */
+  bottom: 72px;
+  /* Agrandi : 320 → 420px pour une image plus lisible. */
+  width: 420px;
+  max-width: calc(100vw - 24px);
+  background: var(--bg-elevated);
+  border-radius: 12px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  z-index: 900;
+  animation: mini-player-in 0.18s ease-out;
+}
+.mini-player-host[hidden] { display: none; }
+
+@keyframes mini-player-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.mini-player-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 8px 8px 12px;
+  cursor: pointer;
+  user-select: none;
+}
+.mini-player-title {
+  flex: 1;
+  min-width: 0;
+  color: var(--text-on-dark);
+  font-size: 0.9rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mini-player-bar .icon-btn-mini {
+  background: transparent;
+  border: none;
+  color: var(--text-on-dark);
+  opacity: 0.85;
+  cursor: pointer;
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  line-height: 1;
+}
+.mini-player-bar .icon-btn-mini:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.mini-player-video-slot {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  line-height: 0;
+  position: relative;
+}
+.mini-player-video-slot video.mini-player-video {
+  width: 100% !important;
+  height: 100% !important;
+  max-height: none !important;
+  min-height: 0 !important;
+  border-radius: 0 !important;
+  display: block;
+  object-fit: contain;
+  background: #000;
+}
+
+@media (max-width: 640px) {
+  .mini-player-host {
+    right: 10px;
+    left: 10px;
+    bottom: 56px;
+    width: auto;
+  }
+}
+
+/* ============ Champ "Tags" (✎ Modifier les métadonnées) : puces mot +
+   photo, glisser/cliquer une image directement sur une puce ============ */
+.tag-field-modern {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.tag-field-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 10px 12px;
+  background: color-mix(in srgb, var(--accent) 5%, var(--bg));
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--border));
+  border-radius: 12px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.tag-field-chips:focus-within {
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
+  box-shadow: 0 0 0 3px rgba(229, 9, 20, 0.1);
+}
+.tag-chips-empty { font-size: 0.8rem; color: var(--text-muted); }
+.tag-chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 10px 4px 4px;
+  border-radius: 20px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.tag-chip:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.18);
+}
+.tag-chip-img-slot.org-image-slot {
+  width: 28px; height: 28px; min-width: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: pointer;
+  gap: 0;
+  background: rgba(255,255,255,0.2);
+  flex-shrink: 0;
+}
+.tag-chip-img-slot img {
+  width: 28px !important; height: 28px !important; min-width: 28px !important;
+  border-radius: 50%; border: none; object-fit: cover;
+}
+.tag-chip-img-slot .org-image-placeholder {
+  width: 28px; height: 28px; padding: 0;
+  border: none; border-radius: 50%;
+  font-size: 0.85rem;
+  background: rgba(255,255,255,0.2);
+  color: #fff;
+}
+.tag-chip-img-slot input[type="file"] { display: none; }
+.tag-chip-img-slot.drag-over { box-shadow: 0 0 0 2px #fff; }
+.tag-chip-img-slot.has-pending-preview::after { content: none; }
+.tag-chip-name { line-height: 1.4; }
+.tag-chip-remove {
+  border: none;
+  background: rgba(255,255,255,0.25);
+  color: #fff;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  font-size: 0.65rem;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  opacity: 0.85;
+  transition: background 0.12s, opacity 0.12s;
+}
+.tag-chip-remove:hover { background: rgba(255,255,255,0.5); opacity: 1; }
+
+.tag-field-add-row { position: relative; }
+.tag-field-add-row input[type="text"] {
+  width: 100%;
+  background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
+  color: var(--text); padding: 10px 12px; font-family: inherit; font-size: 0.9rem;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.tag-field-add-row input[type="text"]:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(229, 9, 20, 0.12);
+}
+.tag-field-hint { margin: 0; }
+
+/* Suggestions en direct pendant la frappe dans le champ "Tags" (tags
+   existants proches + option "Créer le tag ..."), pour repérer tout de
+   suite un quasi-doublon ("nature" / "natures") avant de valider. Purement
+   client (window.__ALL_TAGS__, déjà chargé pour toute la page), sans
+   requête serveur — voir initTagField dans main.js. */
+.tag-suggest-box {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(11,36,71,0.2);
+  overflow: auto;
+  max-height: 280px;
+  z-index: 40;
+  padding: 4px 0;
+}
+.tag-suggest-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 14px; font-size: 0.88rem; color: var(--text); cursor: pointer;
+  transition: background 0.1s ease;
+}
+.tag-suggest-item:hover, .tag-suggest-item.active {
+  background: color-mix(in srgb, var(--accent) 10%, var(--bg));
+}
+.tag-suggest-item-thumb {
+  width: 28px; height: 28px; border-radius: 50%;
+  object-fit: cover; flex-shrink: 0;
+  background: var(--bg); border: 1px solid var(--border);
+}
+.tag-suggest-item-thumb-ph {
+  width: 28px; height: 28px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  background: color-mix(in srgb, var(--accent) 12%, var(--bg));
+  color: var(--accent); font-size: 0.75rem; font-weight: 700;
+  border: 1px solid color-mix(in srgb, var(--accent) 25%, var(--border));
+}
+.tag-suggest-item-label { flex: 1; min-width: 0; font-weight: 500; }
+.tag-suggest-item-meta {
+  display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+}
+.tag-suggest-item-count { color: var(--text-muted); font-size: 0.76rem; white-space: nowrap; }
+.tag-suggest-item-near {
+  font-size: 0.72rem; color: #b45309;
+  background: rgba(245, 158, 11, 0.15);
+  padding: 2px 7px; border-radius: 999px; white-space: nowrap;
+}
+.tag-suggest-item-create {
+  color: var(--accent); font-weight: 600;
+  border-top: 1px dashed var(--border);
+  margin-top: 2px;
+}
+.tag-suggest-item-create .tag-suggest-item-thumb-ph {
+  background: var(--accent); color: #fff; border-color: var(--accent);
+}
+.tag-suggest-hint {
+  padding: 6px 14px 8px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
+  margin-top: 2px;
+}
+
+/* ============ Lignes de listes d'items & boutons d'action (Ajout/Retrait/Suppression) ============ */
+.playlist-item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 2px 4px;
+  border-radius: 6px;
+  transition: background 0.1s ease;
+}
+.playlist-item-row:hover {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+.playlist-item-row .checkbox-field {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+}
+.playlist-item-delete {
+  flex-shrink: 0;
+  opacity: 0.6;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 3px;
+  border-radius: 4px;
+  font-size: 0.78rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.playlist-item-delete:hover {
+  opacity: 1;
+  background: color-mix(in srgb, var(--danger, #e63946) 18%, transparent);
+  color: var(--danger, #e63946);
+}
+
+.playlist-new-top-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--border);
+}
+.playlist-new-top-inline .js-new-top-name {
+  flex: 1 1 160px;
+  min-width: 140px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.82rem;
+}
+.playlist-new-top-inline .js-new-top-name:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.category-select-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.category-select-row select {
+  flex: 1;
+  width: 100%;
+}
+
+/* Actions catégorie : Retirer / + Nouvelle / 🗑 Supprimer — libellés explicites */
+.category-actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+.cat-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  line-height: 1.2;
+}
+.cat-action-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.cat-action-clear {
+  color: var(--text-muted);
+}
+.cat-action-create {
+  background: rgba(229, 9, 20, 0.08);
+  border-color: rgba(229, 9, 20, 0.35);
+  color: var(--accent);
+}
+.cat-action-create:hover {
+  background: rgba(229, 9, 20, 0.16);
+}
+.cat-action-delete {
+  margin-left: auto;
+  border-color: rgba(220, 38, 38, 0.4);
+  color: #dc2626;
+  background: rgba(220, 38, 38, 0.06);
+}
+.cat-action-delete:hover {
+  background: rgba(220, 38, 38, 0.14);
+  border-color: #dc2626;
+}
+.cat-action-cancel {
+  color: var(--text-muted);
+}
+
+.category-new-inline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 8px;
+  border-radius: 8px;
+  background: var(--bg-elevated, var(--bg-card));
+  border: 1px dashed var(--border);
+}
+.category-new-inline input {
+  flex: 1;
+  min-width: 0;
+  padding: 7px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.85rem;
+}
+.category-new-inline input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.category-field-hint {
+  margin: 6px 0 0;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+.category-field-hint em {
+  font-style: normal;
+  font-weight: 700;
+  color: var(--text);
+}
+.category-field-hint strong {
+  color: var(--text);
+}
+
+.tag-chip-delete {
+  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  font-size: 0.65rem;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: -2px;
+  opacity: 0.7;
+  transition: background 0.12s, opacity 0.12s;
+}
+.tag-chip-delete:hover {
+  background: rgba(230, 57, 70, 0.9);
+  opacity: 1;
+}
+
+/* ============================================================
+   UI densification / dashboard (minmax 240/220 vidéos, bords droits,
+   auto-fill sous-playlists + org-cards, couverture inchangée 250×153)
+   ============================================================ */
+
+/* Hover / focus : légère élévation des cases vidéo (ne change pas la taille).
+   Bords droits (border-radius: 0) — pas d'arrondi sur les cases vidéo. */
+.card-wrap {
+  min-width: 0;
+  overflow: hidden;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  border-radius: 0;
+}
+.card-wrap:hover,
+.card-wrap:focus-within {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+}
+[data-theme="dark"] .card-wrap:hover,
+[data-theme="dark"] .card-wrap:focus-within,
+[data-theme="turquoise"] .card-wrap:hover,
+[data-theme="turquoise"] .card-wrap:focus-within {
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+
+/* Corps de case vidéo : padding un peu plus serré verticalement (police
+   et hauteur de titre inchangées — toujours 2 lignes à 0.9rem). */
+.card-body {
+  padding: 6px 2px 4px;
+}
+
+/* Sidebar : libellés un peu plus lisibles (taille des cases inchangée) */
+.side-list .side-item-name,
+.side-list .side-item-label {
+  font-size: 0.72rem;
+}
+
+/* Titres h2 des sections Organiser / sous-playlists */
+.organize-col > h2,
+.sub-playlists-head h2 {
+  padding-left: 10px;
+  border-left: 3px solid var(--accent);
+}
+
+/* Bouton densité compacte (topbar) */
+.compact-toggle-btn {
+  white-space: nowrap;
+  color: var(--text-on-dark);
+  opacity: 0.9;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.85rem;
+}
+.compact-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+.compact-toggle-btn.is-active {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.45);
+}
+
+/* Mode compact : gaps / paddings uniquement — jamais minmax ni réduction
+   de police des titres (contrainte dashboard). */
+body.ui-compact .grid {
+  gap: 8px;
+}
+body.ui-compact .search-match-grid {
+  gap: 8px;
+}
+body.ui-compact .org-cards-list.view-grid {
+  gap: 6px;
+}
+body.ui-compact .org-cards-list.view-grid .org-card {
+  padding: 8px;
+}
+body.ui-compact .content-toolbar {
+  padding: 3px 6px;
+  margin-bottom: 4px;
+}
+body.ui-compact .card-body {
+  padding: 4px 2px 2px;
+}
+body.ui-compact .collection-header {
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  gap: 12px;
+}
+body.ui-compact .sub-playlists-section {
+  padding: 10px 12px;
+  margin: 8px 0 12px;
+}
+body.ui-compact .dashboard-stats {
+  gap: 8px;
+  margin-bottom: 8px;
+}
+body.ui-compact .dashboard-stat {
+  padding: 10px 12px;
+}
+body.ui-compact .dashboard-stat-num {
+  font-size: 1.25rem;
+}
+body.ui-compact .section-title {
+  margin: 14px 0 8px;
+  padding: 4px 0 4px 10px;
+}
+body.ui-compact .featured-banner {
+  padding: 12px;
+  margin-bottom: 14px;
+  gap: 12px;
+}
+
+
+/* Tactile / clavier : actions toujours accessibles (pas seulement au survol) */
+@media (hover: none), (pointer: coarse) {
+  .org-card-actions,
+  .tag-card-actions {
+    opacity: 1 !important;
+    transform: none !important;
+    pointer-events: auto !important;
+  }
+}
+.org-card-actions:focus-within,
+.tag-card-actions:focus-within {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+/* ============================================================================
+   Écran de lecture — page vidéo, colonne "À découvrir aussi" / "Vidéo
+   suivante" (côté droit).
+
+   ANCIEN COMPORTEMENT (retiré à la demande) : l'écran de lecture restait
+   "FIGÉ" (position: sticky) en haut de page pendant que la colonne de
+   droite défilait pour son propre compte (overflow-y: auto indépendant).
+   Ce mécanisme est désormais désactivé : plus aucun élément de la page
+   vidéo n'est en position sticky ni en défilement indépendant — tout
+   défile ensemble, normalement, comme le reste du site. Bloc conservé
+   vide (plutôt que supprimé) pour garder la trace de cet historique sans
+   avoir à le retrouver ailleurs si jamais on doit s'y référer. */
+
+/* ============================================================================
+   "Dossiers de la bibliothèque" (Paramètres) : bouton "Parcourir…" qui
+   ouvre le sélecteur de dossier natif de Windows (voir /browse_folder côté
+   serveur, static/js/main.js → initFolderBrowse). Additif uniquement :
+   .inline-form et ses boutons existants ne sont pas modifiés, on ajoute
+   juste une variante de couleur pour ce bouton secondaire + le style du
+   message de statut sous le formulaire (erreur éventuelle). ---- */
+.inline-form .btn-secondary {
+  background: var(--bg-card);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.inline-form .btn-secondary:hover {
+  background: var(--bg);
+  border-color: var(--text-muted);
+}
+.inline-form .btn-secondary:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.browse-folder-status { margin-top: 6px; }
+.browse-folder-status-error { color: var(--danger); }

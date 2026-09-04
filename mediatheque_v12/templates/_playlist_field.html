@@ -1,0 +1,85 @@
+{# Champ "Playlists" pour "✎ Modifier les métadonnées" (popup rapide + page
+   vidéo) :
+     - "Ajouter à une playlist principale" : cases à cocher (une par
+       playlist principale existante).
+     - "Ajouter à un sous-playlist" : reste grisé avec le message "Ajout de
+       sous-playlist impossible" tant qu'AUCUNE playlist principale n'est
+       cochée ci-dessus. Dès qu'une (ou plusieurs) playlist(s) principale(s)
+       sont cochées, SEUL(S) leur(s) groupe(s) de sous-playlists apparaissent
+       (une case cochée = un groupe visible ; plusieurs cases cochées =
+       autant de groupes visibles) — le groupe d'une playlist principale NON
+       cochée disparaît toujours, même si la vidéo a déjà une de ses
+       sous-playlists cochée (cette sous-playlist reste alors uniquement
+       visible/retirable via sa puce tout en haut du champ). Chaque groupe
+       visible contient les cases à cocher des sous-playlists existantes de
+       cette playlist, plus un champ "Créer et ajouter" pour en créer une
+       nouvelle directement dessous (pas de sélecteur de parent : le parent
+       est celui du groupe affiché) — donc la création de sous-playlist ne
+       concerne toujours que la playlist principale cochée correspondante.
+   Les playlists déjà associées à la vidéo restent visibles sous forme de
+   puces au-dessus, retirables d'un clic. #}
+{% macro playlist_field(tree, selected_ids=None) %}
+<div class="playlist-field-modern js-playlist-field">
+  <div class="playlist-selected-chips js-playlist-chips">
+    <span class="playlist-chips-empty muted">Aucune playlist sélectionnée pour le moment</span>
+  </div>
+
+  <div class="playlist-add-row">
+    <span class="playlist-add-label">Ajouter à une playlist principale</span>
+    <div class="playlist-checkbox-list js-playlist-top-checklist">
+      {% for top in tree or [] %}
+      <div class="playlist-item-row">
+        <label class="checkbox-field playlist-checkbox playlist-checkbox-top">
+          <input type="checkbox" name="playlists" value="{{ top.id }}" class="js-top-playlist-cb" data-name="{{ top.name }}" {{ 'checked' if selected_ids and top.id in selected_ids }}>
+          <span>{{ top.name }}</span>
+        </label>
+        <button type="button" class="icon-btn icon-btn-mini icon-btn-danger js-delete playlist-item-delete" data-type="playlist" data-id="{{ top.id }}" data-name="{{ top.name }}" title="Supprimer définitivement la playlist « {{ top.name }} » de la base">🗑</button>
+      </div>
+      {% else %}
+      <span class="muted playlist-top-empty">Aucune playlist pour le moment.</span>
+      {% endfor %}
+    </div>
+    <div class="playlist-new-top-inline">
+      <input type="text" class="js-new-top-name" placeholder="Nom de la nouvelle playlist principale">
+      <button type="button" class="playlist-add-btn js-new-top-create-btn">Créer et ajouter</button>
+    </div>
+  </div>
+
+  {% set ns = namespace(any_visible=False) %}
+  {% for top in tree or [] %}
+    {% if selected_ids and top.id in selected_ids %}
+      {% set ns.any_visible = True %}
+    {% endif %}
+  {% endfor %}
+  <div class="playlist-add-row js-sub-add-row{{ '' if ns.any_visible else ' playlist-add-row-disabled' }}">
+    <span class="playlist-add-label">Ajouter à une sous-playlist</span>
+    <p class="playlist-lock-hint js-sub-lock-hint" {{ 'hidden' if ns.any_visible }}>🚫 Ajout de sous-playlist impossible : coche d'abord une playlist principale ci-dessus.</p>
+    <div class="playlist-sub-groups js-playlist-sub-groups">
+      {% for top in tree or [] %}
+      {% set is_top_checked = selected_ids and top.id in selected_ids %}
+      <details class="playlist-sub-group js-playlist-sub-group" data-parent-id="{{ top.id }}" data-parent-name="{{ top.name }}" {{ 'open' if is_top_checked }} {{ 'hidden' if not is_top_checked }}>
+        <summary class="playlist-sub-group-title js-playlist-sub-summary">Sous-playlist de {{ top.name }}</summary>
+        <div class="playlist-checkbox-list js-playlist-sub-checklist">
+          {% for c in top.children %}
+          <div class="playlist-item-row">
+            <label class="checkbox-field playlist-checkbox playlist-checkbox-sub">
+              <input type="checkbox" name="playlists" value="{{ c.id }}" data-name="{{ c.name }}" data-parent="{{ top.name }}" {{ 'checked' if selected_ids and c.id in selected_ids }}>
+              <span>{{ c.name }}</span>
+            </label>
+            <button type="button" class="icon-btn icon-btn-mini icon-btn-danger js-delete playlist-item-delete" data-type="playlist" data-id="{{ c.id }}" data-name="{{ c.name }}" title="Supprimer définitivement la sous-playlist « {{ c.name }} » de la base">🗑</button>
+          </div>
+          {% else %}
+          <span class="muted playlist-sub-empty">Aucune sous-playlist pour le moment.</span>
+          {% endfor %}
+        </div>
+        <div class="playlist-new-sub-inline">
+          <input type="text" class="js-new-sub-name" placeholder="Nom de la nouvelle sous-playlist">
+          <input type="date" class="js-new-sub-date" title="Date de création (obligatoire)">
+          <button type="button" class="playlist-add-btn js-new-sub-create-btn" data-parent-id="{{ top.id }}">Créer et ajouter</button>
+        </div>
+      </details>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endmacro %}

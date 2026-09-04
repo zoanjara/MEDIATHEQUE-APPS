@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}{{ category.name }}{% endblock %}
+{% block content %}
+
+<div class="collection-header">
+  <div class="collection-cover">
+    {% if category.image1 %}
+      <img src="{{ url_for('category_image', filename=category.image1) }}" alt="">
+    {% else %}
+      <div class="collection-cover-placeholder">🗂</div>
+    {% endif %}
+    <a class="collection-play-btn" href="{{ url_for('category_play', category_id=category.id) }}" title="Lire la catégorie entière" aria-label="Lire la catégorie entière">
+      <span class="collection-play-icon"></span>
+    </a>
+  </div>
+  <div class="collection-info">
+    <div class="collection-kicker">Catégorie</div>
+    <h1 class="collection-title">{{ category.name }}</h1>
+    <div class="collection-stars">
+      {% if category.rating %}{{ '★' * category.rating }}{{ '☆' * (5 - category.rating) }}{% else %}<span class="muted">Sans note</span>{% endif %}
+    </div>
+    {% if category.comment %}<p class="collection-comment">{{ category.comment }}</p>{% endif %}
+    <div class="collection-meta">{{ total }} vidéo{{ 's' if total != 1 else '' }}</div>
+    <div class="collection-actions">
+      <button type="button" class="icon-btn js-rename" data-type="category" data-id="{{ category.id }}" data-name="{{ category.name }}" title="Renommer la catégorie">✎ Renommer</button>
+      <button type="button" class="icon-btn icon-btn-danger js-delete" data-type="category" data-id="{{ category.id }}" data-name="{{ category.name }}" title="Supprimer la catégorie">✕ Supprimer</button>
+    </div>
+
+    <details class="collection-edit-panel">
+      <summary class="icon-btn">🗂 Modifier titre / image / note</summary>
+      <form action="{{ url_for('category_full_edit', category_id=category.id) }}" method="post" enctype="multipart/form-data" class="org-edit-form">
+        <input type="hidden" name="ajax" value="1">
+        <label class="field-full">Titre
+          <input type="text" name="name" value="{{ category.name }}" required>
+        </label>
+        <label>Note
+          <div class="star-rating-input" data-name="rating">
+            <input type="hidden" name="rating" value="{{ category.rating or 0 }}">
+            {% for i in range(1, 6) %}<span class="star-choice {{ 'filled' if category.rating and i <= category.rating else '' }}" data-star="{{ i }}">★</span>{% endfor %}
+            <span class="star-clear" role="button" tabindex="0" title="Retirer la note">✕</span>
+          </div>
+        </label>
+        <label class="field-full">Commentaire
+          <textarea name="comment" rows="2" placeholder="Aucun commentaire...">{{ category.comment or '' }}</textarea>
+        </label>
+        <label class="field-full">Photo de couverture</label>
+        <div class="field-full org-images-edit">
+          <label class="org-image-slot org-image-slot-single">
+            {% if category.image1 %}<img src="{{ url_for('category_image', filename=category.image1) }}" alt="">{% else %}<span class="org-image-placeholder">🖼 Ajouter une photo de couverture</span>{% endif %}
+            <input type="file" name="image1" accept="image/*">
+          </label>
+        </div>
+        <div class="field-full edit-panel-actions">
+          <button type="submit" class="btn-primary">✓ Enregistrer</button>
+        </div>
+      </form>
+    </details>
+  </div>
+</div>
+
+{% set show_category = false %}
+{% set show_playlist = true %}
+{% set unified_toolbar = true %}
+
+{% include "_search_matches.html" %}
+{% include "_video_grid.html" %}
+
+{% endblock %}

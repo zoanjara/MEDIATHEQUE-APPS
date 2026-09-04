@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}🏷 {{ tag.name }}{% endblock %}
+{% block content %}
+
+<div class="collection-header">
+  <div class="collection-cover collection-cover-tag">
+    {% set cover = tag.image1 or tag.image2 or tag.image3 %}
+    {% if cover %}
+      <img class="tag-cover-bg" src="{{ url_for('tag_image', filename=cover) }}" alt="" aria-hidden="true">
+      <img class="tag-cover-main" src="{{ url_for('tag_image', filename=cover) }}" alt="">
+    {% else %}
+      <div class="collection-cover-placeholder">🏷</div>
+    {% endif %}
+  </div>
+  <div class="collection-info">
+    <div class="collection-kicker">Tag</div>
+    <h1 class="collection-title">{{ tag.name }}</h1>
+    <div class="collection-meta">{{ total }} vidéo{{ 's' if total != 1 else '' }}</div>
+    <div class="collection-actions">
+      <button type="button" class="icon-btn js-rename" data-type="tag" data-id="{{ tag.id }}" data-name="{{ tag.name }}" title="Renommer le tag">✎ Renommer</button>
+      <button type="button" class="icon-btn icon-btn-danger js-delete" data-type="tag" data-id="{{ tag.id }}" data-name="{{ tag.name }}" title="Supprimer le tag">✕ Supprimer</button>
+    </div>
+
+    <details class="collection-edit-panel">
+      <summary class="icon-btn">🖼 Modifier l'image du tag</summary>
+      <form action="{{ url_for('tag_full_edit', tag_id=tag.id) }}" method="post" enctype="multipart/form-data" class="org-edit-form">
+        <input type="hidden" name="ajax" value="1">
+        <label class="field-full">Nom
+          <input type="text" name="name" value="{{ tag.name }}" required>
+        </label>
+        <label class="field-full">Image du tag <span class="field-hint">(le tag devient un "tag image", affiché partout où il apparaît)</span></label>
+        <div class="field-full org-images-edit">
+          <label class="org-image-slot org-image-slot-single">
+            {% if tag.image1 %}<img src="{{ url_for('tag_image', filename=tag.image1) }}" alt="">{% else %}<span class="org-image-placeholder">🖼 Ajouter une image</span>{% endif %}
+            <input type="file" name="image1" accept="image/*">
+          </label>
+        </div>
+        <div class="field-full edit-panel-actions">
+          <button type="submit" class="btn-primary">✓ Enregistrer</button>
+        </div>
+      </form>
+    </details>
+  </div>
+</div>
+
+{% set show_category = true %}
+{% set show_playlist = true %}
+{% set show_tag = false %}
+{% set unified_toolbar = true %}
+
+{% include "_search_matches.html" %}
+{% include "_video_grid.html" %}
+
+{% endblock %}

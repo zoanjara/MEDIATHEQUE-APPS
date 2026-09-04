@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Médiathèque{% if q %} — recherche « {{ q }} »{% endif %}{% endblock %}
+{% block content %}
+
+{% if featured %}
+<div class="featured-banner">
+  {% if featured.thumbnail %}<img src="{{ url_for('thumb', filename=featured.thumbnail) }}" alt="">{% endif %}
+  <div>
+    <div class="fb-label">📌 À la une</div>
+    <div class="fb-title">{{ featured.title }}</div>
+    <div class="fb-meta">{{ featured.duration_seconds|duration }} · {{ featured.width }}×{{ featured.height }}</div>
+    <a class="fb-btn" href="{{ url_for('video_detail', video_id=featured.id) }}">▶ Regarder</a>
+  </div>
+</div>
+{% endif %}
+
+{% set show_category = true %}
+{% set show_playlist = true %}
+{% set unified_toolbar = true %}
+
+{% if videos|length == 0 and not (q or category_id or tag_id or playlist_id or duration_min or duration_max or size_min or size_max or resolution or rating_min or date_from or date_to or has_comment or favorite_only) %}
+  <div class="empty-state">
+    <div class="empty-state-icon" aria-hidden="true">🎬</div>
+    <p><strong>Aucune vidéo trouvée.</strong></p>
+    <p>Si c'est ta première utilisation, va dans <a href="{{ url_for('settings_view') }}">Paramètres</a> pour ajouter un dossier et lancer un scan.</p>
+  </div>
+{% else %}
+  {% include "_search_matches.html" %}
+  {% include "_video_grid.html" %}
+{% endif %}
+
+{% endblock %}

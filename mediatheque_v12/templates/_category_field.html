@@ -1,0 +1,49 @@
+{# Champ catégorie unifié (page vidéo + popup édition rapide).
+   Actions clairement séparées :
+   - choisir une catégorie existante (select)
+   - retirer la catégorie de CETTE vidéo seulement (bouton « Retirer »)
+   - créer une nouvelle catégorie et l’assigner (bouton « + Nouvelle »)
+   - supprimer définitivement une catégorie de la base (bouton 🗑)
+#}
+{% macro category_field(categories, selected_id=None, selected_name='', uid='cat') -%}
+<div class="category-field-modern js-category-field" data-uid="{{ uid }}">
+  <input type="hidden" name="category" class="js-category-hidden" value="{{ selected_name or '' }}">
+
+  <div class="category-search-row">
+    <input type="search" class="js-category-filter" placeholder="Filtrer la liste…" autocomplete="off" aria-label="Filtrer les catégories">
+  </div>
+
+  <div class="category-select-row">
+    <select class="js-category-select" size="1" aria-label="Catégorie de la vidéo">
+      <option value="">— Aucune catégorie —</option>
+      {% for c in categories %}
+      <option value="{{ c.name }}" data-cat-id="{{ c.id }}" {{ 'selected' if selected_id is not none and c.id == selected_id }}>{{ c.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="category-actions-row">
+    <button type="button" class="cat-action-btn cat-action-clear js-category-clear-btn" title="Retirer la catégorie de cette vidéo uniquement (la catégorie reste dans la base)" {{ 'hidden' if not selected_id }}>
+      ✕ Retirer
+    </button>
+    <button type="button" class="cat-action-btn cat-action-create js-category-toggle-create" title="Créer une nouvelle catégorie et l’assigner à cette vidéo">
+      + Nouvelle
+    </button>
+    <button type="button" class="cat-action-btn cat-action-delete icon-btn-danger js-category-delete-btn" title="Supprimer définitivement cette catégorie de la base" {{ 'hidden' if not selected_id }}>
+      🗑 Supprimer
+    </button>
+  </div>
+
+  <div class="category-new-inline js-category-new-box" style="display:none" hidden>
+    <input type="text" class="js-category-new-input" placeholder="Nom de la nouvelle catégorie" autocomplete="off">
+    <button type="button" class="playlist-add-btn js-category-new-btn">Créer</button>
+    <button type="button" class="cat-action-btn cat-action-cancel js-category-cancel-create" title="Annuler">Annuler</button>
+  </div>
+
+  <p class="category-field-hint js-category-hint">
+    <span class="cat-hint-choose">Choisissez une catégorie dans la liste.</span>
+    <span class="cat-hint-assigned" hidden>« <strong class="js-category-hint-name"></strong> » est assignée. <em>Retirer</em> = cette vidéo seulement · <em>Supprimer</em> = toute la base.</span>
+    <span class="cat-hint-create" hidden>Saisissez un nom puis cliquez <em>Créer</em> pour l’ajouter et l’assigner.</span>
+  </p>
+</div>
+{%- endmacro %}
